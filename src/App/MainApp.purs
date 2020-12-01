@@ -6,7 +6,6 @@ import CSS (StyleM, color)
 import CSS.Color (red, green)
 import Control.Apply (lift2)
 import Data.Array ((!!))
-
 import Data.DateTime (Time)
 import Data.Maybe (Maybe(..))
 import Data.String (Pattern(..), joinWith, split)
@@ -15,12 +14,14 @@ import Data.Time.Duration (Seconds)
 import Effect.Class (class MonadEffect)
 import Effect.Class.Console (log)
 import Effect.Now (nowTime)
+import Effect.Timer (setInterval)
 import Halogen (liftEffect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.CSS as HCSS
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
+import SupJS (cleanInputBox)
 
 
 
@@ -37,7 +38,8 @@ type State = {
               myText::String,
               myTimeNow:: Maybe Time,
               myPreviousTime:: Maybe Time,
-              timeDifference::Maybe Seconds}
+              timeDifference::Maybe Seconds,
+              timer::Int}
 
 data Action = Update | SendInput String
 
@@ -50,7 +52,7 @@ fromJustString (Just s) = s
 component :: forall q i o m.MonadEffect m => H.Component HH.HTML q i o m
 component =
   H.mkComponent
-    { initialState: \_ -> { wordCounter: 0, input:"", wrongWordCounter: 0, myText:fromJustString (myWords !! 0), myTimeNow: Nothing, myPreviousTime: Nothing, timeDifference:Nothing}
+    { initialState: \_ -> {timer:60, wordCounter: 0, input:"", wrongWordCounter: 0, myText:fromJustString (myWords !! 0), myTimeNow: Nothing, myPreviousTime: Nothing, timeDifference:Nothing}
     , render
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
     }
@@ -63,7 +65,7 @@ render state =
                 wrongWordIndicator state
               ] 
     [HH.p_
-        [ HH.text $ show (fromJustString (myWords !! state.wordCounter)) <> " Most Recent Time: " <> show state.myTimeNow <>" Last Recorded Time: "<> show state.myPreviousTime <> " My time difference: " <> show state.timeDifference]
+        [ HH.text $ show (fromJustString (myWords !! state.wordCounter))<> show state.timer <> " Most Recent Time: " <> show state.myTimeNow <>" Last Recorded Time: "<> show state.myPreviousTime <> " My time difference: " <> show state.timeDifference]
       
       ,HH.input
         [ HP.id_ "inp",
@@ -102,18 +104,18 @@ handleAction :: forall cs o m.MonadEffect m => Action → H.HalogenM State Actio
 handleAction = case _ of
   Update ->
     do
-     log(myParagraph)
-     log(myarrayedstring)
+      H.modify_ \st -> st { timer= st.timer - 1}
+     
   SendInput s ->
     do
-      
       mynowtime <- liftEffect nowTime
       H.modify_ \st -> st { wordCounter= st.wordCounter + 1,input = s, myText=fromJustString (myWords !!st.wordCounter)}
       H.modify_ \st -> st {myPreviousTime=st.myTimeNow, myTimeNow = Just mynowtime, timeDifference = lift2 diff (Just mynowtime) st.myTimeNow }
       H.modify_ \st -> st { wrongWordCounter=st.wrongWordCounter+incrementor st.input st.myText}
-
-
-
+      _<-liftEffect $ cleanInputBox unit
+      pure unit
+      
+      
 
 
 
@@ -126,5 +128,7 @@ myWords = split (Pattern " ") myParagraph
 myarrayedstring :: String
 myarrayedstring = joinWith "," myWords
 
+
+   
 
   

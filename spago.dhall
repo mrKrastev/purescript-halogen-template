@@ -6,6 +6,7 @@
   , "effect"
   , "halogen"
   , "halogen-css"
+  , "js-timers"
   , "node-fs-aff"
   , "now"
   , "psci-support"
