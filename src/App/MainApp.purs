@@ -11,16 +11,20 @@ import Data.Maybe (Maybe(..))
 import Data.String (Pattern(..), joinWith, split)
 import Data.Time (diff)
 import Data.Time.Duration (Seconds)
+import Effect.Aff (Aff, Milliseconds(..))
+import Effect.Aff as Aff
+import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Effect.Class.Console (log)
 import Effect.Now (nowTime)
-import Effect.Timer (setInterval)
-import Halogen (liftEffect)
+import Halogen (SubscriptionId, liftEffect, unsubscribe)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.CSS as HCSS
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
+import Halogen.Query.EventSource (Emitter)
+import Halogen.Query.EventSource as ES
 import SupJS (cleanInputBox)
 
 
@@ -41,7 +45,7 @@ type State = {
               timeDifference::Maybe Seconds,
               timer::Int}
 
-data Action = Update | SendInput String
+data Action = Update | SendInput String | Decrement SubscriptionId
 
 
 fromJustString :: Maybe String -> String
@@ -49,23 +53,23 @@ fromJustString Nothing = ""
 fromJustString (Just s) = s
 
 
-component :: forall q i o m.MonadEffect m => H.Component HH.HTML q i o m
+component :: forall q i o m. MonadEffect m => MonadAff m => H.Component HH.HTML q i o m
 component =
   H.mkComponent
-    { initialState: \_ -> {timer:60, wordCounter: 0, input:"", wrongWordCounter: 0, myText:fromJustString (myWords !! 0), myTimeNow: Nothing, myPreviousTime: Nothing, timeDifference:Nothing}
+    { initialState: \_ -> {timer:5, wordCounter: 0, input:"", wrongWordCounter: 0, myText:fromJustString (myWords !! 0), myTimeNow: Nothing, myPreviousTime: Nothing, timeDifference:Nothing}
     , render
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
     }
 
 render :: forall cs m. State -> H.ComponentHTML Action cs m
 render state =
-  
+ 
   HH.div 
       [HCSS.style do 
                 wrongWordIndicator state
               ] 
     [HH.p_
-        [ HH.text $ show (fromJustString (myWords !! state.wordCounter))<> show state.timer <> " Most Recent Time: " <> show state.myTimeNow <>" Last Recorded Time: "<> show state.myPreviousTime <> " My time difference: " <> show state.timeDifference]
+        [ HH.text $ show (fromJustString (myWords !! state.wordCounter))<>" Timer: "<> show state.timer <>" " <>" Most Recent Time: " <> show state.myTimeNow <>" Last Recorded Time: "<> show state.myPreviousTime <> " My time difference: " <> show state.timeDifference]
       
       ,HH.input
         [ HP.id_ "inp",
@@ -74,7 +78,7 @@ render state =
     ,HH.p_
         [ HH.text $  " " <> show state.input <> " "<> show (state.wrongWordCounter) <> " wrong words" <> show myWords ]
     , HH.button
-        [ HE.onClick \_ -> Just Update ]
+        [ HE.onClick \_ -> Just Update]
         [ HH.text "Update" ]
     ]
     
@@ -100,12 +104,8 @@ incrementor input word
 
 
 
-handleAction :: forall cs o m.MonadEffect m => Action → H.HalogenM State Action cs o m Unit
-handleAction = case _ of
-  Update ->
-    do
-      H.modify_ \st -> st { timer= st.timer - 1}
-     
+handleAction :: forall cs o m.MonadEffect m => MonadAff m => Action → H.HalogenM State Action cs o m Unit
+handleAction = case _ of 
   SendInput s ->
     do
       mynowtime <- liftEffect nowTime
@@ -115,7 +115,16 @@ handleAction = case _ of
       _<-liftEffect $ cleanInputBox unit
       pure unit
       
-      
+  Update ->
+    do
+      _ <- H.subscribe' \sid->
+         ES.affEventSource \emitter -> do
+          _ <- Aff.forkAff $ repeatAction emitter 1000.0 (Decrement sid) 
+          pure mempty
+      pure unit
+  Decrement sid -> do
+     state <- H.get
+     if state.timer>0 then  H.modify_ (\state -> state { timer = state.timer - 1 }) else unsubscribe sid
 
 
 
@@ -127,6 +136,14 @@ myWords = split (Pattern " ") myParagraph
 
 myarrayedstring :: String
 myarrayedstring = joinWith "," myWords
+
+repeatAction :: Emitter Aff Action -> Number -> Action -> Aff Unit
+repeatAction emitter t action = aux
+  where
+  aux = do
+    Aff.delay (Milliseconds t)
+    ES.emit emitter action
+    aux
 
 
    
