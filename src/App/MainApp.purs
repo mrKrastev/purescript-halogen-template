@@ -22,6 +22,7 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.CSS as HCSS
 import Halogen.HTML.Events as HE
+import Halogen.HTML.Properties (style)
 import Halogen.HTML.Properties as HP
 import Halogen.Query.EventSource (Emitter)
 import Halogen.Query.EventSource as ES
@@ -63,24 +64,42 @@ component =
 
 render :: forall cs m. State -> H.ComponentHTML Action cs m
 render state =
- 
-  HH.div 
-      [HCSS.style do 
-                wrongWordIndicator state
-              ] 
+ HH.div
+ [style "width:100%; height:100%; background-color:green;"]
+ [
+  HH.div  
+    [style"display:flex; flex-wrap:wrap;justify-content:center;background-color: #fff;justify-self:center;margin-top:20%;"]          
     [HH.p_
         [ HH.text $ show (fromJustString (myWords !! state.wordCounter))<>" Timer: "<> show state.timer <>" " <>" Most Recent Time: " <> show state.myTimeNow <>" Last Recorded Time: "<> show state.myPreviousTime <> " My time difference: " <> show state.timeDifference]
-      
+        
       ,HH.input
         [ HP.id_ "inp",
-        HE.onValueChange \s -> Just (SendInput s)
+        HE.onValueChange \s -> Just (SendInput s),
+        style "height:50px;width:150px; margin-left:40%; margin-right:40%;font-size:24px"
          ]
     ,HH.p_
         [ HH.text $  " " <> show state.input <> " "<> show (state.wrongWordCounter) <> " wrong words" <> show myWords ]
     , HH.button
-        [ HE.onClick \_ -> Just Update]
+        [ HE.onClick \_ -> Just Update,style "background-color:orange; border-style:none; self-align:center;"]
+        [ HH.text "Update" ]
+    ],
+    HH.div  
+    [style"display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:20%;"]          
+    [HH.p_
+        [ HH.text $ show (fromJustString (myWords !! state.wordCounter))<>" Timer: "<> show state.timer <>" " <>" Most Recent Time: " <> show state.myTimeNow <>" Last Recorded Time: "<> show state.myPreviousTime <> " My time difference: " <> show state.timeDifference]
+      ,HH.input
+        [ HP.id_ "inp",
+        HE.onValueChange \s -> Just (SendInput s),
+        style "height:50px;width:150px; margin-left:40%; margin-right:40%;font-size:24px"
+         ]
+    ,HH.p_
+        [ HH.text $  " " <> show state.input <> " "<> show (state.wrongWordCounter) <> " wrong words" <> show myWords ]
+    , HH.button
+        [ HE.onClick \_ -> Just Update,style "background-color:orange; border-style:none; self-align:center;"]
         [ HH.text "Update" ]
     ]
+  ]
+    
     
 
 
@@ -95,6 +114,7 @@ wrongWordIndicator state
     | state.input == state.myText = do 
                           color green
     | otherwise = color red
+    
     
 
 incrementor :: forall t8. Eq t8 => t8 -> t8 -> Int
@@ -124,7 +144,7 @@ handleAction = case _ of
       pure unit
   Decrement sid -> do
      state <- H.get
-     if state.timer>0 then  H.modify_ (\state -> state { timer = state.timer - 1 }) else unsubscribe sid
+     if state.timer>0 then  H.modify_ (\st -> st { timer = st.timer - 1 }) else unsubscribe sid
 
 
 
