@@ -16,5 +16,5 @@ main = HA.runHalogenAff do
   -- HA.awaitLoad
   -- traverse_ (runUI MainApp.component unit) =<< HA.selectElement (QuerySelector "body")
   body <- HA.awaitBody
-  liftEffect $ setAttribute "style" "background-color:black;" (toElement body)
+  liftEffect $ setAttribute "style" "background-color:	#23272a;display:flex;flex-wrap:wrap;justify-content:center;color:#FF8C00" (toElement body)
   runUI MainApp.component unit body
