@@ -8,10 +8,11 @@ import Control.Apply (lift2)
 import Data.Array ((!!))
 import Data.Array.NonEmpty (elemLastIndex)
 import Data.DateTime (Time)
+import Data.Int (toNumber)
 import Data.Maybe (Maybe(..))
 import Data.String (Pattern(..), joinWith, split)
 import Data.Time (diff)
-import Data.Time.Duration (Seconds)
+import Data.Time.Duration (Seconds(..))
 import Effect.Aff (Aff, Milliseconds(..))
 import Effect.Aff as Aff
 import Effect.Aff.Class (class MonadAff)
@@ -48,7 +49,7 @@ type State = {
               totalTypingTime::Maybe Seconds,
               timer::Int,
               timerIsRunning::Boolean,
-              wpm::Number}
+              wpm::Maybe Number}
 
 data Action = Update | SendInput String | Decrement SubscriptionId
 
@@ -57,11 +58,14 @@ fromJustString :: Maybe String -> String
 fromJustString Nothing = ""
 fromJustString (Just s) = s
 
+calcWPM:: Int-> Maybe Seconds -> Maybe Number
+calcWPM wordsCount (Just(Seconds sec)) = Just( ((toNumber wordsCount) / sec) * toNumber 60 )
+calcWPM wordsCount Nothing = Nothing
 
 component :: forall q i o m. MonadEffect m => MonadAff m => H.Component HH.HTML q i o m
 component =
   H.mkComponent
-    { initialState: \_ -> {wpm:0.0,
+    { initialState: \_ -> {wpm:Nothing,
     timerIsRunning:false,
     timer:60, wordCounter: 0,
      input:"", 
@@ -80,8 +84,9 @@ render state =
  [
     HH.div  
     [style"display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%"]       
-    [HH.p_
-        [HH.text $ show (fromJustString (myWords !! state.wordCounter))<> " My time difference: " <> show state.timeDifference]
+    [HH.p
+    [style"color:red;"] 
+        [HH.text $ show (fromJustString (myWords !! state.wordCounter))<> " My time difference: " <> show state.timeDifference <> " WPM: "<> show state.wpm]
       ,HH.input
         [ HP.id_ "inp",
         HE.onValueChange \s -> Just (SendInput s),
@@ -138,7 +143,7 @@ handleAction = case _ of
     do
       mynowtime <- liftEffect nowTime
       H.modify_ \st -> st { wordCounter= st.wordCounter + 1,input = s, myText=fromJustString (myWords !!st.wordCounter)}
-      H.modify_ \st -> st { myTimeNow = Just mynowtime, timeDifference = lift2 diff (Just mynowtime) st.myFirstTime }
+      H.modify_ \st -> st { myTimeNow = Just mynowtime, timeDifference = lift2 diff (Just mynowtime) st.myFirstTime, wpm = calcWPM st.wordCounter st.timeDifference }
       H.modify_ \st -> st { wrongWordCounter=st.wrongWordCounter+incrementor st.input st.myText}
       _<-liftEffect $ cleanInputBox unit
       pure unit
