@@ -28,7 +28,7 @@ import Halogen.HTML.Properties (style)
 import Halogen.HTML.Properties as HP
 import Halogen.Query.EventSource (Emitter)
 import Halogen.Query.EventSource as ES
-import SupJS (cleanInputBox)
+import SupJS (cleanInputBox, disableInputBox)
 
 
 
@@ -67,7 +67,7 @@ component =
   H.mkComponent
     { initialState: \_ -> {wpm:Nothing,
     timerIsRunning:false,
-    timer:60, wordCounter: 0,
+    timer:10, wordCounter: 0,
      input:"", 
      wrongWordCounter: 0,
       myText:fromJustString (myWords !! 0),
@@ -85,16 +85,21 @@ render state =
     HH.div  
     [style"display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%"]       
     [HH.p
-    [style"color:red;"] 
-        [HH.text $ show (fromJustString (myWords !! state.wordCounter))<> " My time difference: " <> show state.timeDifference <> " WPM: "<> show state.wpm]
+    [style"font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:orange;text-shadow: 0px 2px 3px #555;min-width:100%"] 
+        [HH.text $  (fromJustString (myWords !! state.wordCounter))<>" "<> (fromJustString (myWords !! (state.wordCounter+1)))<>" "<> (fromJustString (myWords !! (state.wordCounter+2)))]
       ,HH.input
         [ HP.id_ "inp",
         HE.onValueChange \s -> Just (SendInput s),
-        style "height:50px;width:150px; margin-left:40%; margin-right:25%; margin-top:5%; margin-bottom:10%;font-size:24px"
+        style " color:white; height:50px;width:150px; margin-left:20%; margin-top:5%; margin-bottom:10%;font-size:24px;border-color:orange;background-color:transparent;"
          ]
-    ,HH.p_
+    ,HH.p
+    [style"color:yellow;font:40px Comic Sans;min-width:300px;text-align:center;"] 
         [ HH.text $   show state.timer <>" seconds left"]
-    ,HH.p_
+    ,HH.p
+    [style"color:lightblue;font:24px Comic Sans;min-width:300px;"] 
+        [ HH.text $  " WPM: "<> show state.wpm]
+    ,HH.p
+    [style"color:lightgreen;font:24px Comic Sans;min-width:300px;"] 
         [ HH.text $  "  You Typed:  " <> show state.input <> " "<> show (state.wrongWordCounter) <> " wrong words"]
     ]
   ]
@@ -153,7 +158,17 @@ handleAction = case _ of
     log("heh")
   Decrement sid -> do
      state <- H.get
-     if state.timer>0 then  H.modify_ (\st -> st { timer = st.timer - 1 }) else unsubscribe sid
+     if state.timer>0 
+     then  H.modify_ (\st -> st { timer = st.timer - 1 })
+      else 
+        do 
+        unsubscribe sid
+        _<-liftEffect $ disableInputBox unit
+        pure unit
+
+        
+
+
 
 
 
