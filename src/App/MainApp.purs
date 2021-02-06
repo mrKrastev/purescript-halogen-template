@@ -134,24 +134,25 @@ handleAction = case _ of
     do
     state<-H.get
     if state.timerIsRunning==false
-    then
-    do
-      mynowtime <- liftEffect nowTime
-      H.modify_ \st -> st { timerIsRunning= true,myFirstTime=Just mynowtime}
-      _ <- H.subscribe' \sid->
-         ES.affEventSource \emitter -> do
-          _ <- Aff.forkAff $ repeatAction emitter 1000.0 (Decrement sid) 
-          pure mempty
-      pure unit
-    else 
-      pure unit
-    do
-      mynowtime <- liftEffect nowTime
-      H.modify_ \st -> st { wordCounter= st.wordCounter + 1,input = s, myText=fromJustString (myWords !!st.wordCounter)}
-      H.modify_ \st -> st { myTimeNow = Just mynowtime, timeDifference = lift2 diff (Just mynowtime) st.myFirstTime, wpm = calcWPM st.wordCounter st.timeDifference }
-      H.modify_ \st -> st { wrongWordCounter=st.wrongWordCounter+incrementor st.input st.myText}
-      _<-liftEffect $ cleanInputBox unit
-      pure unit
+      then
+        do
+        mynowtime <- liftEffect nowTime
+        H.modify_ \st -> st { timerIsRunning= true,myFirstTime=Just mynowtime}
+        _ <- H.subscribe' \sid->
+          ES.affEventSource \emitter -> do
+            _ <- Aff.forkAff $ repeatAction emitter 1000.0 (Decrement sid) 
+            pure mempty
+        pure unit
+      else 
+        pure unit
+  
+    mynowtime <- liftEffect nowTime
+    let timeDifference = lift2 diff (Just mynowtime) state.myFirstTime
+    H.modify_ \st -> st { wordCounter= st.wordCounter + 1,input = s, myText=fromJustString (myWords !!st.wordCounter)}
+    H.modify_ \st -> st { myTimeNow = Just mynowtime, timeDifference = timeDifference, wpm = calcWPM st.wordCounter timeDifference }
+    H.modify_ \st -> st { wrongWordCounter=st.wrongWordCounter+incrementor st.input st.myText}
+    _<-liftEffect $ cleanInputBox unit
+    pure unit
       
       
   Update -> do

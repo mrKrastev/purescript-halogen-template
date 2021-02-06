@@ -7,3 +7,4 @@ exports.cleanInputBox = () => {
         document.getElementById("inp").disabled=true;
            return 1;
        };
+
