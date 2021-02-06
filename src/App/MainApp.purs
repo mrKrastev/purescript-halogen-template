@@ -39,14 +39,11 @@ import SupJS (cleanInputBox, disableInputBox)
 
 
 type State = {  
-              input::String,
               wrongWordCounter::Int,
               wordCounter::Int,
-              myText::String,
               myTimeNow:: Maybe Time,
               myFirstTime:: Maybe Time,
               timeDifference::Maybe Seconds,
-              totalTypingTime::Maybe Seconds,
               timer::Int,
               timerIsRunning::Boolean,
               wpm::Maybe Number}
@@ -62,17 +59,19 @@ calcWPM:: Int-> Maybe Seconds -> Maybe Number
 calcWPM wordsCount (Just(Seconds sec)) = Just( ((toNumber wordsCount) / sec) * toNumber 60 )
 calcWPM wordsCount Nothing = Nothing
 
+sixtySec::Int -> Seconds
+sixtySec int = Seconds (toNumber int)
+
 component :: forall q i o m. MonadEffect m => MonadAff m => H.Component HH.HTML q i o m
 component =
   H.mkComponent
     { initialState: \_ -> {wpm:Nothing,
     timerIsRunning:false,
-    timer:10, wordCounter: 0,
-     input:"", 
+    timer:60, wordCounter: 0, 
      wrongWordCounter: 0,
-      myText:fromJustString (myWords !! 0),
-       myTimeNow: Nothing, myFirstTime: Nothing, timeDifference:Nothing,
-       totalTypingTime:Nothing}
+       myTimeNow: Nothing,
+        myFirstTime: Nothing,
+         timeDifference:Nothing}
     , render
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
     }
@@ -100,7 +99,7 @@ render state =
         [ HH.text $  " WPM: "<> show state.wpm]
     ,HH.p
     [style"color:lightgreen;font:24px Comic Sans;min-width:300px;"] 
-        [ HH.text $  "  You Typed:  " <> show state.input <> " "<> show (state.wrongWordCounter) <> " wrong words"]
+        [ HH.text $  "  Correct words: " <> show (state.wordCounter-state.wrongWordCounter) <>" " <> " Wrong words: "<> show (state.wrongWordCounter)]
     ]
   ]
     
@@ -148,9 +147,13 @@ handleAction = case _ of
   
     mynowtime <- liftEffect nowTime
     let timeDifference = lift2 diff (Just mynowtime) state.myFirstTime
-    H.modify_ \st -> st { wordCounter= st.wordCounter + 1,input = s, myText=fromJustString (myWords !!st.wordCounter)}
-    H.modify_ \st -> st { myTimeNow = Just mynowtime, timeDifference = timeDifference, wpm = calcWPM st.wordCounter timeDifference }
-    H.modify_ \st -> st { wrongWordCounter=st.wrongWordCounter+incrementor st.input st.myText}
+    let myText =fromJustString (myWords !!state.wordCounter)
+    H.modify_ \st -> st {
+                         wordCounter= st.wordCounter + 1,
+                         myTimeNow = Just mynowtime,
+                         timeDifference = timeDifference,
+                         wpm = calcWPM (st.wordCounter-st.wrongWordCounter) timeDifference,
+                         wrongWordCounter=st.wrongWordCounter+incrementor s myText }
     _<-liftEffect $ cleanInputBox unit
     pure unit
       
@@ -165,6 +168,8 @@ handleAction = case _ of
         do 
         unsubscribe sid
         _<-liftEffect $ disableInputBox unit
+        let timeDifference = sixtySec 60
+        H.modify_\st->st{wpm=calcWPM (st.wordCounter-st.wrongWordCounter) (Just(timeDifference))}
         pure unit
 
         
