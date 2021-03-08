@@ -47,7 +47,8 @@ type State = {
               timeDifference::Maybe Seconds,
               timer::Int,
               timerIsRunning::Boolean,
-              wpm::Maybe Number}
+              wpm::Maybe Number,
+              zombiePosition::Number}
 
 data Action = Update | SendInput String | Decrement SubscriptionId
 
@@ -72,7 +73,8 @@ component =
      wrongWordCounter: 0,
        myTimeNow: Nothing,
         myFirstTime: Nothing,
-         timeDifference:Nothing}
+         timeDifference:Nothing,
+         zombiePosition: 350.0}
     , render
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
     }
@@ -86,13 +88,13 @@ render state =
     HH.div  
     [style"display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%"]
     [HH.div  
-    [style"display:inline-flex;width:100%;justify-content:space-between;justify-self:center;margin-top:10%;background-color:transparent;"]
+    [style"display:inline-flex;width:100%;justify-self:center;margin-top:10%;background-color:transparent;"]
     [HH.img
     [HP.src  "images/magician-wizard.png"
     ,HP.height 200
     ,HP.width 250]
     ,HH.div
-    [style"position:relative;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;animation: myfirst 5s linear 2s infinite alternate;@keyframes myfirst {0%   {background-color:red; left:0px; top:0px;}25%  {background-color:yellow; left:200px; top:0px;}50%  {background-color:blue; left:200px; top:200px;}75%  {background-color:green; left:0px; top:200px;}100% {background-color:red; left:0px; top:0px;}"]
+    [style("position:relative;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;left:"<>show state.zombiePosition<>"px;")]
     [HH.img
     [HP.src  "images/zombie-pve.gif"
     ,HP.height 200
@@ -143,6 +145,11 @@ incrementor input word
     | input == word = 0
     | otherwise = 1
 
+zombiePushValue :: forall t8. Eq t8 => t8 -> t8 -> Number
+zombiePushValue input word
+    | input == word = 2.0
+    | otherwise = -4.0
+
 
 
 handleAction :: forall cs o m.MonadEffect m => MonadAff m => Action → H.HalogenM State Action cs o m Unit
@@ -171,7 +178,8 @@ handleAction = case _ of
                          myTimeNow = Just mynowtime,
                          timeDifference = timeDifference,
                          wpm = calcWPM (st.wordCounter-st.wrongWordCounter) timeDifference,
-                         wrongWordCounter=st.wrongWordCounter+incrementor s myText }
+                         wrongWordCounter=st.wrongWordCounter+incrementor s myText,
+                         zombiePosition=st.zombiePosition+zombiePushValue s myText }
     _<-liftEffect $ cleanInputBox unit
     pure unit
       
@@ -180,8 +188,8 @@ handleAction = case _ of
     log("heh")
   Decrement sid -> do
      state <- H.get
-     if state.timer>0 
-     then  H.modify_ (\st -> st { timer = st.timer - 1 })
+     if (state.timer>0) && (state.zombiePosition>(-150.0))
+     then  H.modify_ (\st -> st { timer = st.timer - 1,zombiePosition=st.zombiePosition-8.0 })
       else 
         do 
         unsubscribe sid
