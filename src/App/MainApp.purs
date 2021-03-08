@@ -2,9 +2,10 @@ module App.MainApp where
 
 import Prelude
 
-import CSS (Float, StyleM, color, white)
+import CSS (Float, StyleM, color, height, white, width)
 import CSS.Color (red, green)
 import Control.Apply (lift2)
+import DOM.HTML.Indexed (HTMLimg)
 import Data.Array ((!!))
 import Data.Array.NonEmpty (elemLastIndex)
 import Data.DateTime (Time)
@@ -21,10 +22,10 @@ import Effect.Class.Console (log)
 import Effect.Now (nowTime)
 import Halogen (SubscriptionId, liftEffect, unsubscribe)
 import Halogen as H
-import Halogen.HTML (style_)
+import Halogen.HTML (source, style_)
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-import Halogen.HTML.Properties (style)
+import Halogen.HTML.Properties (height, style)
 import Halogen.HTML.Properties as HP
 import Halogen.Query.EventSource (Emitter)
 import Halogen.Query.EventSource as ES
@@ -78,11 +79,28 @@ component =
 
 render :: forall cs m. State -> H.ComponentHTML Action cs m
 render state =
+ 
  HH.div
  [style "width:50%; background-color:#2c2f33;"]
  [
     HH.div  
-    [style"display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%"]       
+    [style"display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%"]
+    [HH.div  
+    [style"display:inline-flex;width:100%;justify-content:space-between;justify-self:center;margin-top:10%;background-color:transparent;"]
+    [HH.img
+    [HP.src  "images/magician-wizard.png"
+    ,HP.height 200
+    ,HP.width 250]
+    ,HH.div
+    [style"position:relative;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;animation: myfirst 5s linear 2s infinite alternate;@keyframes myfirst {0%   {background-color:red; left:0px; top:0px;}25%  {background-color:yellow; left:200px; top:0px;}50%  {background-color:blue; left:200px; top:200px;}75%  {background-color:green; left:0px; top:200px;}100% {background-color:red; left:0px; top:0px;}"]
+    [HH.img
+    [HP.src  "images/zombie-pve.gif"
+    ,HP.height 200
+    ,HP.width 150]]]
+        ]  
+    ,HH.div
+    [style "width:100%; background-color:#2c2f33;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%"]
+       
     [HH.p
     [style"font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:orange;text-shadow: 0px 2px 3px #555;min-width:100%"] 
         [HH.text $  (fromJustString (myWords !! state.wordCounter))<>" "<> (fromJustString (myWords !! (state.wordCounter+1)))<>" "<> (fromJustString (myWords !! (state.wordCounter+2)))]
