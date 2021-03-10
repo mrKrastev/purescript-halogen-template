@@ -89,10 +89,12 @@ render state =
     [style"display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%"]
     [HH.div  
     [style"display:inline-flex;width:100%;justify-self:center;margin-top:10%;background-color:transparent;"]
+    [HH.div
+    [style("position:relative;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;left:0px;top:50px")]
     [HH.img
-    [HP.src  "images/magician-wizard.png"
-    ,HP.height 200
-    ,HP.width 250]
+    [HP.src  "images/mage.gif"
+    ,HP.height 150
+    ,HP.width 200]]
     ,HH.div
     [style("position:relative;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;left:"<>show state.zombiePosition<>"px;")]
     [HH.img
