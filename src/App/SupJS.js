@@ -8,3 +8,10 @@ exports.cleanInputBox = () => {
            return 1;
        };
 
+ exports.changeParticleSpeed = (speed) => {
+        document.getElementById("inputSpeed").value=speed;
+           return 1;
+       };
+
+
+
