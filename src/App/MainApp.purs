@@ -17,7 +17,7 @@ import Data.Time.Duration (Seconds(..))
 import Effect.Aff (Aff, Milliseconds(..))
 import Effect.Aff as Aff
 import Effect.Aff.Class (class MonadAff)
-import Effect.Class (class MonadEffect)
+import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Class.Console (log)
 import Effect.Now (nowTime)
 import Halogen (SubscriptionId, liftEffect, unsubscribe)
@@ -29,7 +29,8 @@ import Halogen.HTML.Properties (height, style)
 import Halogen.HTML.Properties as HP
 import Halogen.Query.EventSource (Emitter)
 import Halogen.Query.EventSource as ES
-import SupJS (cleanInputBox, disableInputBox)
+import SupJS (changeParticleSpeed, cleanInputBox, disableInputBox)
+import Web.DOM.NonElementParentNode (getElementById)
 
 
 
@@ -57,9 +58,16 @@ fromJustString :: Maybe String -> String
 fromJustString Nothing = ""
 fromJustString (Just s) = s
 
+fromJustNumber :: Maybe Number -> Number
+fromJustNumber Nothing = 1.0
+fromJustNumber (Just s) = s
+
 calcWPM:: Int-> Maybe Seconds -> Maybe Number
 calcWPM wordsCount (Just(Seconds sec)) = Just( ((toNumber wordsCount) / sec) * toNumber 60 )
 calcWPM wordsCount Nothing = Nothing
+
+calcWPMTimer::Number-> Number -> Number
+calcWPMTimer wordsCount time = (wordsCount)/((60.0-time))*60.0
 
 sixtySec::Int -> Seconds
 sixtySec int = Seconds (toNumber int)
@@ -173,15 +181,19 @@ handleAction = case _ of
         pure unit
   
     mynowtime <- liftEffect nowTime
+    let myNewWordCounter = state.wordCounter + 1
     let timeDifference = lift2 diff (Just mynowtime) state.myFirstTime
     let myText =fromJustString (myWords !!state.wordCounter)
+    let myNewWrongWordCounter=state.wrongWordCounter+incrementor s myText
+    let myNewWPM = calcWPM (myNewWordCounter-myNewWrongWordCounter) timeDifference
+    let myNewZombiePosition = state.zombiePosition+zombiePushValue s myText
     H.modify_ \st -> st {
-                         wordCounter= st.wordCounter + 1,
+                         wordCounter= myNewWordCounter,
                          myTimeNow = Just mynowtime,
                          timeDifference = timeDifference,
-                         wpm = calcWPM (st.wordCounter-st.wrongWordCounter) timeDifference,
-                         wrongWordCounter=st.wrongWordCounter+incrementor s myText,
-                         zombiePosition=st.zombiePosition+zombiePushValue s myText }
+                         wpm = myNewWPM,
+                         wrongWordCounter=myNewWrongWordCounter,
+                         zombiePosition= myNewZombiePosition}
     _<-liftEffect $ cleanInputBox unit
     pure unit
       
@@ -191,7 +203,9 @@ handleAction = case _ of
   Decrement sid -> do
      state <- H.get
      if (state.timer>0) && (state.zombiePosition>(-150.0))
-     then  H.modify_ (\st -> st { timer = st.timer - 1,zombiePosition=st.zombiePosition-8.0 })
+     then
+      H.modify_ (\st -> st { timer = st.timer - 1,zombiePosition=st.zombiePosition-8.0,
+                            wpm= Just(calcWPMTimer (((toNumber state.wordCounter))-(toNumber state.wrongWordCounter)) (toNumber st.timer))})
       else 
         do 
         unsubscribe sid
