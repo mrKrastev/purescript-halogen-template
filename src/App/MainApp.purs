@@ -210,11 +210,12 @@ handleAction = case _ of
   Decrement sid -> do
      state <- H.get
      let newSpeed=(changeParticleSpeed (fromJustNumber state.wpm))  
-     let newMagic=(resizeMagic (state.zombiePosition))            
+     let newMagic=(resizeMagic (state.zombiePosition))
+     let newtimer = state.timer - 1            
      if (state.timer>0) && (state.zombiePosition>(-50.0))
      then
-      H.modify_ (\st -> st { timer = st.timer - 1,zombiePosition=st.zombiePosition-8.0,
-                            wpm= Just(calcWPMTimer (((toNumber state.wordCounter))-(toNumber state.wrongWordCounter)) (toNumber st.timer))})
+      H.modify_ (\st -> st { timer = newtimer,zombiePosition=st.zombiePosition-8.0,
+                            wpm= Just(calcWPMTimer (((toNumber state.wordCounter))-(toNumber state.wrongWordCounter)) (toNumber newtimer))})
       else 
         do 
         unsubscribe sid
