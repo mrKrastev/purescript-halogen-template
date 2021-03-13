@@ -29,7 +29,7 @@ import Halogen.HTML.Properties (height, style)
 import Halogen.HTML.Properties as HP
 import Halogen.Query.EventSource (Emitter)
 import Halogen.Query.EventSource as ES
-import SupJS (changeParticleSpeed, cleanInputBox, disableInputBox)
+import SupJS (changeParticleSpeed, cleanInputBox, disableInputBox, resizeMagic)
 import Web.DOM.NonElementParentNode (getElementById)
 
 
@@ -49,7 +49,8 @@ type State = {
               timer::Int,
               timerIsRunning::Boolean,
               wpm::Maybe Number,
-              zombiePosition::Number}
+              zombiePosition::Number,
+              particlesWidth::Number}
 
 data Action = Update | SendInput String | Decrement SubscriptionId
 
@@ -78,11 +79,12 @@ component =
     { initialState: \_ -> {wpm:Nothing,
     timerIsRunning:false,
     timer:60, wordCounter: 0, 
-     wrongWordCounter: 0,
-       myTimeNow: Nothing,
-        myFirstTime: Nothing,
-         timeDifference:Nothing,
-         zombiePosition: 350.0}
+    wrongWordCounter: 0,
+    myTimeNow: Nothing,
+    myFirstTime: Nothing,
+    timeDifference:Nothing,
+    zombiePosition: 350.0,
+    particlesWidth:350.0}
     , render
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
     }
@@ -187,22 +189,29 @@ handleAction = case _ of
     let myNewWrongWordCounter=state.wrongWordCounter+incrementor s myText
     let myNewWPM = calcWPM (myNewWordCounter-myNewWrongWordCounter) timeDifference
     let myNewZombiePosition = state.zombiePosition+zombiePushValue s myText
+    let newMagic=(resizeMagic (state.zombiePosition))
+    pure unit
     H.modify_ \st -> st {
                          wordCounter= myNewWordCounter,
                          myTimeNow = Just mynowtime,
                          timeDifference = timeDifference,
                          wpm = myNewWPM,
                          wrongWordCounter=myNewWrongWordCounter,
-                         zombiePosition= myNewZombiePosition}
+                         zombiePosition= myNewZombiePosition}                   
     _<-liftEffect $ cleanInputBox unit
     pure unit
+    
+    
+
       
       
   Update -> do
     log("heh")
   Decrement sid -> do
      state <- H.get
-     if (state.timer>0) && (state.zombiePosition>(-150.0))
+     let newSpeed=(changeParticleSpeed (fromJustNumber state.wpm))  
+     let newMagic=(resizeMagic (state.zombiePosition))            
+     if (state.timer>0) && (state.zombiePosition>(-50.0))
      then
       H.modify_ (\st -> st { timer = st.timer - 1,zombiePosition=st.zombiePosition-8.0,
                             wpm= Just(calcWPMTimer (((toNumber state.wordCounter))-(toNumber state.wrongWordCounter)) (toNumber st.timer))})

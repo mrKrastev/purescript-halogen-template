@@ -641,6 +641,9 @@ var pJS = function(tag_id, params){
 
     /* update each particles param */
     pJS.particles.move.speed=document.getElementById("speedInput").value;
+    if(document.getElementById("magicWidthField").value>-150){
+      pJS.canvas.w=document.getElementById("magicWidthField").value;
+    }
     pJS.fn.particlesUpdate();
 
     /* draw each particle */
