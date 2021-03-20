@@ -2,36 +2,34 @@ module App.MainApp where
 
 import Prelude
 
-import CSS (Float, StyleM, color, height, white, width)
+import CSS (StyleM, color)
 import CSS.Color (red, green)
 import Control.Apply (lift2)
-import DOM.HTML.Indexed (HTMLimg)
 import Data.Array ((!!))
-import Data.Array.NonEmpty (elemLastIndex)
+import Data.Array.ST (unshiftAll)
 import Data.DateTime (Time)
 import Data.Int (toNumber)
 import Data.Maybe (Maybe(..))
 import Data.String (Pattern(..), joinWith, split)
 import Data.Time (diff)
 import Data.Time.Duration (Seconds(..))
+import Effect (Effect)
 import Effect.Aff (Aff, Milliseconds(..))
 import Effect.Aff as Aff
 import Effect.Aff.Class (class MonadAff)
-import Effect.Class (class MonadEffect, liftEffect)
+import Effect.Class (class MonadEffect)
 import Effect.Class.Console (log)
 import Effect.Now (nowTime)
 import Halogen (SubscriptionId, liftEffect, unsubscribe)
 import Halogen as H
-import Halogen.HTML (source, style_)
 import Halogen.HTML as HH
+import Halogen.HTML.Events (onLoad)
 import Halogen.HTML.Events as HE
-import Halogen.HTML.Properties (height, style)
+import Halogen.HTML.Properties (style)
 import Halogen.HTML.Properties as HP
 import Halogen.Query.EventSource (Emitter)
 import Halogen.Query.EventSource as ES
-import SupJS (changeParticleSpeed, cleanInputBox, disableInputBox, resizeMagic)
-import Web.DOM.NonElementParentNode (getElementById)
-
+import SupJS (changeParticleSpeed, cleanInputBox, disableInputBox, renderMagicJs, resizeMagic)
 
 
 
@@ -73,8 +71,8 @@ calcWPMTimer wordsCount time = (wordsCount)/((60.0-time))*60.0
 sixtySec::Int -> Seconds
 sixtySec int = Seconds (toNumber int)
 
-component :: forall q i o m. MonadEffect m => MonadAff m => H.Component HH.HTML q i o m
-component =
+pveComponent :: forall q i o m. MonadEffect m => MonadAff m => H.Component HH.HTML q i o m
+pveComponent =
   H.mkComponent
     { initialState: \_ -> {wpm:Nothing,
     timerIsRunning:false,
@@ -91,7 +89,6 @@ component =
 
 render :: forall cs m. State -> H.ComponentHTML Action cs m
 render state =
- 
  HH.div
  [style "width:50%; background-color:#2c2f33;"]
  [
@@ -131,12 +128,13 @@ render state =
         [ HH.text $  " WPM: "<> show state.wpm]
     ,HH.p
     [style"color:lightgreen;font:24px Comic Sans;min-width:300px;"] 
-        [ HH.text $  "  Correct words: " <> show (state.wordCounter-state.wrongWordCounter) <>" " <> " Wrong words: "<> show (state.wrongWordCounter)]
+        [ HH.text $  "  Correct words: " <> show (state.wordCounter-state.wrongWordCounter)<>" " <> " Wrong words: "<> show (state.wrongWordCounter)]
     ]
   ]
     
-    
 
+
+  
 
 
 wrongWordIndicator :: forall t3 t8.
@@ -247,8 +245,5 @@ repeatAction emitter t action = aux
     ES.emit emitter action
     aux
 
-
-
-   
 
   

@@ -24,4 +24,7 @@ exports.resizeMagic = (widthAmount) => {
            return 1;
        };
 
-
+exports.renderMagicJs = () => {
+        document.getElementById("particles-js").style.visibility="visible";
+           return "";
+       };
