@@ -31,9 +31,9 @@ import Halogen.HTML.Properties (style)
 import Halogen.HTML.Properties as HP
 import Halogen.Query.EventSource (Emitter)
 import Halogen.Query.EventSource as ES
-import SupJS (changeParticleSpeed, cleanInputBox, disableInputBox, resizeMagic)
+import SupJS (changeParticleSpeed, cleanInputBox, disableInputBox, renderMagicJs, resizeMagic)
 
-data State = PVE PveState  | PVP | Entry
+data State = PVE PveState  | PVP PvpState | Entry
 
 type PveState={  
               wrongWordCounter::Int,
@@ -46,10 +46,28 @@ type PveState={
               wpm::Maybe Number,
               zombiePosition::Number,
               particlesWidth::Number}
+type PvpState={  
+              wrongWordCounter::Int,
+              wordCounter::Int,
+              myTimeNow:: Maybe Time,
+              myFirstTime:: Maybe Time,
+              timeDifference::Maybe Seconds,
+              timer::Int,
+              timerIsRunning::Boolean,
+              wpm::Maybe Number,
+              enemyHp::Number,
+              playerHp::Number,
+              particlesWidth::Number,
+              enemyWPM::Maybe Number}
+              
 
 updatePVE::(PveState->PveState)-> State->State
 updatePVE fn (PVE state) = (PVE (fn state))
 updatePVE fn state = state 
+
+updatePVP::(PvpState->PvpState)-> State->State
+updatePVP fn (PVP state) = (PVP (fn state))
+updatePVP fn state = state 
 
 
 initialPVEstate::PveState
@@ -63,12 +81,27 @@ initialPVEstate = {wpm:Nothing,
     zombiePosition: 350.0,
     particlesWidth:350.0}
 
+initialPVPstate::PvpState
+initialPVPstate = {wrongWordCounter:0,
+              wordCounter:0,
+              myTimeNow:Nothing,
+              myFirstTime:Nothing,
+              timeDifference:Nothing,
+              timer:60,
+              timerIsRunning:false,
+              wpm:Nothing,
+              enemyHp:3.0,
+              playerHp:3.0,
+              particlesWidth:350.0,
+              enemyWPM:Nothing}
 
-data Action = ActionEntry ActionEntry | ActionPVE ActionPVE 
+
+data Action = ActionEntry ActionEntry | ActionPVE ActionPVE |ActionPVP ActionPVP
 
 
 data ActionEntry = RunPVE | RunPVP  
 data ActionPVE =  RunEntry | Update | SendInput String | Decrement SubscriptionId
+data ActionPVP=  RunEntrypvp | Updatepvp | SendInputpvp String | Decrementpvp SubscriptionId
 
 --entryComponent :: forall t177 t178 t198 t201. Component HTML t201 t198 t178 t177
 entryComponent :: forall t400 t401 t423 t426. MonadEffect t400 => MonadAff t400 => Component HTML t426 t423 t401 t400
@@ -81,12 +114,85 @@ entryComponent =
     where
     handleActionPicker (ActionEntry actionEntry) = handleActionEntry actionEntry
     handleActionPicker (ActionPVE actionPve) = handleActionPVE actionPve
+    handleActionPicker (ActionPVP actionPvp) = handleActionPVP actionPvp
     handleActionEntry = case _ of 
         RunPVE -> do 
          H.put (PVE initialPVEstate)
-         pure unit       
+         pure unit   
+         _<-liftEffect $ renderMagicJs unit
+         pure unit  
         RunPVP -> do
-                log("heh")
+            H.put (PVE initialPVEstate)
+            pure unit   
+            _<-liftEffect $ renderMagicJs unit
+            pure unit 
+
+    handleActionPVP = case _ of 
+       SendInputpvp s ->
+            do
+            state<-H.get
+
+            case state of
+              PVP pvpState ->do
+                log(show pvpState.timerIsRunning)
+                if pvpState.timerIsRunning==false
+                then
+                    do
+                    mynowtime <- liftEffect nowTime
+                    H.modify_ $ updatePVP $ \st->st{ timerIsRunning= true,myFirstTime=Just mynowtime}
+                    _ <- H.subscribe' \sid->
+                      ES.affEventSource \emitter -> do
+                        _ <- Aff.forkAff $ repeatAction emitter 1000.0 (ActionPVP (Decrementpvp sid)) 
+                        pure mempty
+                    pure unit
+                else 
+                    pure unit
+            
+                mynowtime <- liftEffect nowTime
+                let myNewWordCounter = pvpState.wordCounter + 1
+                let timeDifference = lift2 diff (Just mynowtime) pvpState.myFirstTime
+                let myText =fromJustString (myWords !!pvpState.wordCounter)
+                let myNewWrongWordCounter=pvpState.wrongWordCounter+incrementor s myText
+                let myNewWPM = calcWPM (myNewWordCounter-myNewWrongWordCounter) timeDifference
+               -- let myNewZombiePosition = pveState.zombiePosition+zombiePushValue s myText
+                let newMagic=(resizeMagic (pvpState.particlesWidth))
+                pure unit
+                H.modify_ $ updatePVP \st -> st{
+                                    wordCounter= myNewWordCounter,
+                                    myTimeNow = Just mynowtime,
+                                    timeDifference = timeDifference,
+                                    wpm = myNewWPM,
+                                    wrongWordCounter=myNewWrongWordCounter}                   
+                _<-liftEffect $ cleanInputBox unit
+                pure unit
+              _ -> do
+                pure unit
+            
+       Updatepvp -> pure unit
+       Decrementpvp sid -> do
+            state <- H.get
+            case state of
+              PVE pveState ->do
+                log(show pveState.timer)
+                let newSpeed=(changeParticleSpeed (fromJustNumber pveState.wpm))  
+                let newMagic=(resizeMagic (pveState.zombiePosition))
+                let newtimer = pveState.timer - 1            
+                if (pveState.timer>0) && (pveState.zombiePosition>(-50.0))
+                then
+                do
+                    let newZombiePosition = pveState.zombiePosition-8.0
+                    H.modify_ $ updatePVE \st-> st{ timer = newtimer,zombiePosition=newZombiePosition,
+                                            wpm= Just(calcWPMTimer (((toNumber pveState.wordCounter))-(toNumber pveState.wrongWordCounter)) (toNumber newtimer))}
+                    else 
+                        do 
+                        unsubscribe sid
+                        _<-liftEffect $ disableInputBox unit
+                        let timeDifference = sixtySec 60
+                        H.modify_ $ updatePVE $ \st->st{wpm=calcWPM (pveState.wordCounter-pveState.wrongWordCounter) (Just(timeDifference))}
+                        pure unit
+              _->do
+               pure unit
+       RunEntrypvp -> pure unit
     
     handleActionPVE = case _ of
         SendInput s ->
@@ -169,7 +275,7 @@ entryComponent =
         [HH.button [ HE.onClick \_ -> Just (ActionEntry RunPVP) ][ HH.text "Play PVP" ]
             ]
         ]
-    render (PVP) =
+    render (PVP initialPVPstate) =
      HH.div
         [style "width:50%; background-color:#2c2f33;"]
         [
