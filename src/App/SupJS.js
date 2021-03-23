@@ -28,3 +28,18 @@ exports.renderMagicJs = () => {
         document.getElementById("particles-js").style.visibility="visible";
         return 1;
        };
+exports.renderMagicJsPVP = () => {
+        document.getElementById("particles-js").style.visibility="visible";
+        document.getElementById("particles-jsp2").style.visibility="visible";
+        return 1;
+       };
+exports.fixPVPmagicPositioning = () => {
+    window.alert("aha");
+        var magic1 =document.getElementById("particles-js");
+        magic1.style.left="400px";
+        magic1.style.top="300px";
+        var magic2=document.getElementById("particles-jsp2");
+        magic2.style.left="750px";
+        magic2.style.top="300px";
+        return 1;
+       };

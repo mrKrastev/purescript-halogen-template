@@ -31,7 +31,7 @@ import Halogen.HTML.Properties (style)
 import Halogen.HTML.Properties as HP
 import Halogen.Query.EventSource (Emitter)
 import Halogen.Query.EventSource as ES
-import SupJS (changeParticleSpeed, cleanInputBox, disableInputBox, renderMagicJs, resizeMagic)
+import SupJS (changeParticleSpeed, cleanInputBox, disableInputBox, fixPVPmagicPositioning, renderMagicJs, renderMagicJsPVP, resizeMagic)
 
 data State = PVE PveState  | PVP PvpState | Entry
 
@@ -122,16 +122,15 @@ entryComponent =
          _<-liftEffect $ renderMagicJs unit
          pure unit  
         RunPVP -> do
-            H.put (PVE initialPVEstate)
-            pure unit   
-            _<-liftEffect $ renderMagicJs unit
-            pure unit 
+            H.put (PVP initialPVPstate)
+            pure unit
+            fixPVPmagicPosition
+            
 
     handleActionPVP = case _ of 
        SendInputpvp s ->
             do
             state<-H.get
-
             case state of
               PVP pvpState ->do
                 log(show pvpState.timerIsRunning)
@@ -168,27 +167,27 @@ entryComponent =
               _ -> do
                 pure unit
             
-       Updatepvp -> pure unit
+       Updatepvp ->fixPVPmagicRender
        Decrementpvp sid -> do
             state <- H.get
             case state of
-              PVE pveState ->do
-                log(show pveState.timer)
-                let newSpeed=(changeParticleSpeed (fromJustNumber pveState.wpm))  
-                let newMagic=(resizeMagic (pveState.zombiePosition))
-                let newtimer = pveState.timer - 1            
-                if (pveState.timer>0) && (pveState.zombiePosition>(-50.0))
+              PVP pvpState ->do
+                log(show pvpState.timer)
+                let newSpeed=(changeParticleSpeed (fromJustNumber pvpState.wpm))  
+                let newMagic=(resizeMagic (pvpState.particlesWidth))
+                let newtimer = pvpState.timer - 1            
+                if (pvpState.timer>0) && (pvpState.particlesWidth>(-50.0))
                 then
                 do
-                    let newZombiePosition = pveState.zombiePosition-8.0
-                    H.modify_ $ updatePVE \st-> st{ timer = newtimer,zombiePosition=newZombiePosition,
-                                            wpm= Just(calcWPMTimer (((toNumber pveState.wordCounter))-(toNumber pveState.wrongWordCounter)) (toNumber newtimer))}
+                    let newParticlesWidth = pvpState.particlesWidth-8.0
+                    H.modify_ $ updatePVP \st-> st{ timer = newtimer,particlesWidth=newParticlesWidth,
+                                            wpm= Just(calcWPMTimer (((toNumber pvpState.wordCounter))-(toNumber pvpState.wrongWordCounter)) (toNumber newtimer))}
                     else 
                         do 
                         unsubscribe sid
                         _<-liftEffect $ disableInputBox unit
                         let timeDifference = sixtySec 60
-                        H.modify_ $ updatePVE $ \st->st{wpm=calcWPM (pveState.wordCounter-pveState.wrongWordCounter) (Just(timeDifference))}
+                        H.modify_ $ updatePVP $ \st->st{wpm=calcWPM (pvpState.wordCounter-pvpState.wrongWordCounter) (Just(timeDifference))}
                         pure unit
               _->do
                pure unit
@@ -277,8 +276,47 @@ entryComponent =
         ]
     render (PVP initialPVPstate) =
      HH.div
-        [style "width:50%; background-color:#2c2f33;"]
+        [style "width:70%; background-color:#2c2f33;"]
         [
+          HH.div  
+        [style"display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%"]
+        [HH.div  
+        [style"display:inline-flex;width:100%;justify-self:center;margin-top:10%;background-color:transparent;"]
+        [HH.div
+        [style("position:relative;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;left:0px;top:50px")]
+        [HH.img
+        [HP.src  "images/mage.gif"
+        ,HP.height 150
+        ,HP.width 200]]
+        ,HH.div
+        [style("position:absolute;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;right:15%;")]
+        [HH.img
+        [HP.src  "images/zombie-pve.gif"
+        ,HP.height 200
+        ,HP.width 150]]]
+            ]  
+        ,HH.div
+        [style "width:100%; background-color:#2c2f33;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%"]
+        
+        [HH.p
+        [style"font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:orange;text-shadow: 0px 2px 3px #555;min-width:100%"] 
+            [HH.text $  (fromJustString (myWords !! initialPVPstate.wordCounter))<>" "<> (fromJustString (myWords !! (initialPVPstate.wordCounter+1)))<>" "<> (fromJustString (myWords !! (initialPVPstate.wordCounter+2)))]
+        ,HH.input
+            [ HP.id_ "inp",
+            HE.onValueChange \s -> Just (ActionPVP (SendInputpvp s)),
+            HE.onFocus \s -> Just (ActionPVP (Updatepvp)),
+            style " color:white; height:50px;width:150px; margin-left:20%; margin-top:5%; margin-bottom:10%;font-size:24px;border-color:orange;background-color:transparent;"
+            ]
+        ,HH.p
+        [style"color:yellow;font:40px Comic Sans;min-width:300px;text-align:center;"] 
+            [ HH.text $   show initialPVPstate.timer <>" seconds left"]
+        ,HH.p
+        [style"color:lightblue;font:24px Comic Sans;min-width:300px;"] 
+            [ HH.text $  " WPM: "<> show initialPVPstate.wpm]
+        ,HH.p
+        [style"color:lightgreen;font:24px Comic Sans;min-width:300px;"] 
+            [ HH.text $  "  Correct words: " <> show (initialPVPstate.wordCounter-initialPVPstate.wrongWordCounter)<>" " <> " Wrong words: "<> show (initialPVPstate.wrongWordCounter)]
+        ]
         ]
     render (PVE initialPVEstate)  =
      HH.div
@@ -330,6 +368,14 @@ entryComponent =
 
 
 
+fixPVPmagicPosition :: forall t40. Bind t40 => MonadEffect t40 => t40 Unit
+fixPVPmagicPosition = do
+                _<-liftEffect $ fixPVPmagicPositioning unit
+                pure unit
+fixPVPmagicRender :: forall t30. Bind t30 => MonadEffect t30 => t30 Unit
+fixPVPmagicRender = do
+                _<-liftEffect $ renderMagicJsPVP unit
+                pure unit
 
 
 
