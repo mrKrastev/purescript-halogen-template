@@ -2,7 +2,7 @@ module Main where
 
 import Prelude
 
-import App.MainApp as MainApp
+import App.EntryPoint as EntryPoint
 import Effect (Effect)
 import Effect.Class (liftEffect)
 import Halogen.Aff as HA
@@ -17,4 +17,4 @@ main = HA.runHalogenAff do
   -- traverse_ (runUI MainApp.component unit) =<< HA.selectElement (QuerySelector "body")
   body <- HA.awaitBody
   liftEffect $ setAttribute "style" "background-color:	#23272a;display:flex;flex-wrap:wrap;justify-content:center;color:#FF8C00" (toElement body)
-  runUI MainApp.component unit body
+  runUI EntryPoint.entryComponent unit body

@@ -638,16 +638,13 @@ var pJS = function(tag_id, params){
 
     /* clear canvas */
     pJS.canvas.ctx.clearRect(0, 0, pJS.canvas.w, pJS.canvas.h);
-
+    
     /* update each particles param */
-    pJS.particles.move.speed=document.getElementById("speedInput").value;
+    pJS.particles.move.speed=document.getElementById("speedInputp2").value;
     if(document.getElementById("magicWidthField").value>-150){
-      //pJS.canvas.style.offsetWidth=document.getElementById("magicWidthField").value;
-      var previousWidth = document.getElementById("particles-js").style.width;
-      canvas_el.style.width=document.getElementById("magicWidthField").value.toString()+"px";
-      document.getElementById("magicWidthFieldp2").value=previousWidth+(canvas_el.style.width-previousWidth);
-      //pJS.canvas.w=document.getElementById("magicWidthField").value;
-      
+      var magic2=document.getElementById("particles-jsp2");
+      canvas_el.style.width=magic2;
+      document.getElementById("particles-jsp2").style.width=document.getElementById("magicWidthFieldp2").value;
     }
     pJS.fn.particlesUpdate();
 
@@ -1490,12 +1487,12 @@ window.particlesJS = function(tag_id, params){
   /* no string id? so it's object params, and set the id with default id */
   if(typeof(tag_id) != 'string'){
     params = tag_id;
-    tag_id = 'particles-js';
+    tag_id = 'particles-jsp2';
   }
 
   /* no id? set the id to default id */
   if(!tag_id){
-    tag_id = 'particles-js';
+    tag_id = 'particles-jsp2';
   }
 
   /* pJS elements */
