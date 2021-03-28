@@ -643,7 +643,9 @@ var pJS = function(tag_id, params){
     pJS.particles.move.speed=document.getElementById("speedInput").value;
     if(document.getElementById("magicWidthField").value>-150){
       //pJS.canvas.style.offsetWidth=document.getElementById("magicWidthField").value;
+      var previousWidth = document.getElementById("particles-js").style.width;
       canvas_el.style.width=document.getElementById("magicWidthField").value.toString()+"px";
+      document.getElementById("magicWidthFieldp2").value=previousWidth+(canvas_el.style.width-previousWidth);
       //pJS.canvas.w=document.getElementById("magicWidthField").value;
       
     }

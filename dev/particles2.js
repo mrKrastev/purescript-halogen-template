@@ -640,10 +640,11 @@ var pJS = function(tag_id, params){
     pJS.canvas.ctx.clearRect(0, 0, pJS.canvas.w, pJS.canvas.h);
     
     /* update each particles param */
-    pJS.particles.move.speed=document.getElementById("speedInput").value;
+    pJS.particles.move.speed=document.getElementById("speedInputp2").value;
     if(document.getElementById("magicWidthField").value>-150){
-      //pJS.canvas.w=document.getElementById("magicWidthField").value;
-      document.getElementById("particles-jsp2").style.width=document.getElementById("magicWidthField").value.toString()+"px";
+      var magic2=document.getElementById("particles-jsp2");
+      canvas_el.style.width=magic2;
+      document.getElementById("particles-jsp2").style.width=document.getElementById("magicWidthFieldp2").value;
     }
     pJS.fn.particlesUpdate();
 

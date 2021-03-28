@@ -1,6 +1,8 @@
 { name = "halogen-project"
 , dependencies =
   [ "aff"
+  , "aff-coroutines"
+  , "argonaut"
   , "console"
   , "control"
   , "datetime"
@@ -11,6 +13,7 @@
   , "node-fs-aff"
   , "now"
   , "psci-support"
+  , "web-socket"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]
