@@ -3,7 +3,6 @@ module Main where
 import Prelude
 
 import App.EntryPoint as EntryPoint
-import App.MainApp as MainApp
 import Effect (Effect)
 import Effect.Class (liftEffect)
 import Halogen.Aff as HA

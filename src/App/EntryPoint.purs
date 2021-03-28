@@ -3,7 +3,6 @@ module App.EntryPoint where
 
 import Prelude
 
-import App.MainApp (handleAction)
 import CSS (StyleM, color)
 import CSS.Color (red, green)
 import Control.Apply (lift2)
