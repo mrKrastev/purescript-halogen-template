@@ -7,7 +7,7 @@ import CSS (StyleM, color)
 import CSS.Color (red, green)
 import Control.Apply (lift2)
 import Control.Monad.State (class MonadState)
-import Data.Argonaut (JsonDecodeError, decodeJson, parseJson, printJsonDecodeError)
+import Data.Argonaut (JsonDecodeError, decodeJson, encodeJson, parseJson, printJsonDecodeError, stringify)
 import Data.Array ((!!))
 import Data.DateTime (Time)
 import Data.Either (Either(..))
@@ -70,7 +70,10 @@ type PvpState={
               playerHp::Number,
               particlesWidth::Number,
               enemyWPM::Maybe Number,
-              webSocket::WebSocket}
+              webSocket::WebSocket,
+              playerName::String,
+              enemyName::String,
+              enemyCorrectWords::Int}
               
 
 updatePVE::(PveState->PveState)-> State->State
@@ -100,8 +103,8 @@ initialPVEstate = {wpm:Nothing,
 initialEntrystate::EntryState
 initialEntrystate = {name:Nothing}
 
-initialPVPstate::WebSocket->PvpState
-initialPVPstate webSocket = {wrongWordCounter:0,
+initialPVPstate::WebSocket->String->PvpState
+initialPVPstate webSocket name = {wrongWordCounter:0,
               wordCounter:0,
               myTimeNow:Nothing,
               myFirstTime:Nothing,
@@ -113,13 +116,16 @@ initialPVPstate webSocket = {wrongWordCounter:0,
               playerHp:3.0,
               particlesWidth:350.0,
               enemyWPM:Nothing,
-              webSocket}
+              webSocket,
+              playerName:name,
+              enemyName:"Connecting...",
+              enemyCorrectWords:0}
 
 
 data Action = ActionEntry ActionEntry | ActionPVE ActionPVE |ActionPVP ActionPVP 
 
 
-data ActionEntry = RunPVE | RunPVP  | SetName String
+data ActionEntry = RunPVE | RunPVP String  | SetName String
 data ActionPVE =  RunEntry | Update | SendInput String | Decrement SubscriptionId
 data ActionPVP=  RunEntrypvp | Updatepvp | SendInputpvp String | Decrementpvp SubscriptionId | ReceiveMessage String | UpdatePlayer2 (Maybe Number) Int | SetPlayerConnected String
 
@@ -141,7 +147,7 @@ entryComponent =
          pure unit   
          _<-liftEffect $ renderMagicJs unit
          pure unit  
-        RunPVP -> do
+        RunPVP name -> do
             ws <- liftEffect $ WS.create "ws://localhost:3000" []
             liftAff $ delay (Milliseconds 100.0) -- allow ws to initialise
             void $ H.subscribe $
@@ -150,7 +156,8 @@ entryComponent =
                 setupWSListener ws (\msg -> ES.emit emitter (ActionPVP $ ReceiveMessage msg))
              pure $ ES.Finalizer do
                 Aff.killFiber (error "Event source finalized") fiber
-            H.put (PVP (initialPVPstate ws))
+            liftEffect $ WS.sendString ws $ stringify $ encodeJson {name}
+            H.put (PVP (initialPVPstate ws name))
             void $ liftEffect $ fixPVPmagic unit
             pure unit
         SetName s -> H.modify_ $ updateName $ \st->st{name=Just(s)}
@@ -227,8 +234,12 @@ entryComponent =
         case messageToAction msg of
             Left err -> liftEffect $ log err
             Right action -> handleActionPVP action
-       UpdatePlayer2 wpm numberOfCorrectWords -> pure unit
-       SetPlayerConnected name -> pure unit
+       UpdatePlayer2 wpm numberOfCorrectWords -> H.modify_ $ updatePVP $ \st->st{enemyWPM=wpm,enemyCorrectWords=numberOfCorrectWords}
+       SetPlayerConnected name -> do
+                                    H.modify_ $ updatePVP $ \st->st{enemyName=name}
+                                   -- mypvpstate <- H.get
+                                   -- liftEffect $ WS.sendString mypvpstate.ws $ stringify $ encodeJson {name}
+
         
     
     handleActionPVE = case _ of
@@ -310,7 +321,7 @@ entryComponent =
         ],
         HH.div
         [style "width:100%; background-color:#2c2f33;"]
-        [HH.button [ HE.onClick \_ -> Just (ActionEntry RunPVP) ][ HH.text "Play PVP" ]
+        [HH.button [ HE.onClick \_ -> Just (ActionEntry (RunPVP $ fromJustString initialEntrystate.name)) ][ HH.text "Play PVP" ]
             ],
         HH.div
         [style "width:100%; background-color:#2c2f33;"]
@@ -342,10 +353,19 @@ entryComponent =
         [HP.src  "images/player2-mage.gif"
         ,HP.height 150
         ,HP.width 200]]]
-            ]  
         ,HH.div
+        [style("position:absolute;display: inline-flex; flex-wrap:nowrap; width:60%;justify-content:space-between;justify-self:center;top:50%")]
+        [HH.p
+        [style"position:relative;font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:yellow;text-shadow: 0px 2px 3px #555;"] 
+            [HH.text $  (initialPVPstate.playerName)]
+        ,HH.p
+        [style"position:relative;font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:yellow;text-shadow: 0px 2px 3px #555;"] 
+            [HH.text $  (initialPVPstate.enemyName)]
+        ]
+        ]
+        ,
+        HH.div
         [style "width:100%; background-color:#2c2f33;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%"]
-        
         [HH.p
         [style"font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:orange;text-shadow: 0px 2px 3px #555;min-width:100%"] 
             [HH.text $  (fromJustString (myWords !! initialPVPstate.wordCounter))<>" "<> (fromJustString (myWords !! (initialPVPstate.wordCounter+1)))<>" "<> (fromJustString (myWords !! (initialPVPstate.wordCounter+2)))]
@@ -411,7 +431,7 @@ entryComponent =
   ]
 
 
---               HANDLERS -----------------------------------------------------------------------------------------------------
+-- HANDLERS -----------------------------------------------------------------------------------------------------
   
 
 
