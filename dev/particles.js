@@ -645,7 +645,11 @@ var pJS = function(tag_id, params){
       //pJS.canvas.style.offsetWidth=document.getElementById("magicWidthField").value;
       var previousWidth = document.getElementById("particles-js").style.width;
       canvas_el.style.width=document.getElementById("magicWidthField").value.toString()+"px";
-      document.getElementById("magicWidthFieldp2").value=previousWidth+(canvas_el.style.width-previousWidth);
+      try {
+        document.getElementById("magicWidthFieldp2").value=previousWidth+(canvas_el.style.width-previousWidth);
+      } catch (error) {
+        
+      }
       //pJS.canvas.w=document.getElementById("magicWidthField").value;
       
     }

@@ -39,7 +39,7 @@ import WSListener (setupWSListener)
 import Web.Socket.WebSocket (WebSocket)
 import Web.Socket.WebSocket as WS
 
-data State = PVE PveState  | PVP PvpState | Entry
+data State = PVE PveState  | PVP PvpState | Entry EntryState
 
 type PveState={  
               wrongWordCounter::Int,
@@ -52,6 +52,11 @@ type PveState={
               wpm::Maybe Number,
               zombiePosition::Number,
               particlesWidth::Number}
+
+type EntryState={  
+              name::Maybe String
+              }
+              
 type PvpState={  
               wrongWordCounter::Int,
               wordCounter::Int,
@@ -76,6 +81,10 @@ updatePVP::(PvpState->PvpState)-> State->State
 updatePVP fn (PVP state) = (PVP (fn state))
 updatePVP fn state = state 
 
+updateName::(EntryState->EntryState)-> State->State
+updateName fn (Entry state) = (Entry (fn state))
+updateName fn state = state
+
 
 initialPVEstate::PveState
 initialPVEstate = {wpm:Nothing,
@@ -87,6 +96,9 @@ initialPVEstate = {wpm:Nothing,
     timeDifference:Nothing,
     zombiePosition: 350.0,
     particlesWidth:350.0}
+
+initialEntrystate::EntryState
+initialEntrystate = {name:Nothing}
 
 initialPVPstate::WebSocket->PvpState
 initialPVPstate webSocket = {wrongWordCounter:0,
@@ -107,7 +119,7 @@ initialPVPstate webSocket = {wrongWordCounter:0,
 data Action = ActionEntry ActionEntry | ActionPVE ActionPVE |ActionPVP ActionPVP 
 
 
-data ActionEntry = RunPVE | RunPVP  
+data ActionEntry = RunPVE | RunPVP  | SetName String
 data ActionPVE =  RunEntry | Update | SendInput String | Decrement SubscriptionId
 data ActionPVP=  RunEntrypvp | Updatepvp | SendInputpvp String | Decrementpvp SubscriptionId | ReceiveMessage String | UpdatePlayer2 (Maybe Number) Int | SetPlayerConnected String
 
@@ -115,7 +127,7 @@ data ActionPVP=  RunEntrypvp | Updatepvp | SendInputpvp String | Decrementpvp Su
 entryComponent :: forall t400 t401 t423 t426. MonadEffect t400 => MonadAff t400 => Component HTML t426 t423 t401 t400
 entryComponent =
   H.mkComponent
-    { initialState: \_ -> (Entry)
+    { initialState: \_ -> (Entry initialEntrystate)
     , render
     , eval: H.mkEval $ H.defaultEval {handleAction = handleActionPicker }
     }
@@ -140,11 +152,8 @@ entryComponent =
                 Aff.killFiber (error "Event source finalized") fiber
             H.put (PVP (initialPVPstate ws))
             void $ liftEffect $ fixPVPmagic unit
-            
-
             pure unit
-            --fixPVPmagicPosition
-           -- fixPVPmagicRender
+        SetName s -> H.modify_ $ updateName $ \st->st{name=Just(s)}
             
 
     handleActionPVP = case _ of 
@@ -292,7 +301,7 @@ entryComponent =
                pure unit
         RunEntry -> pure unit
 
-    render (Entry) =
+    render (Entry initialEntrystate) =
      HH.div
         [style "width:50%; background-color:#2c2f33; display:grid; justify-content:center;allign-items:center;"]
         [HH.div
@@ -302,7 +311,16 @@ entryComponent =
         HH.div
         [style "width:100%; background-color:#2c2f33;"]
         [HH.button [ HE.onClick \_ -> Just (ActionEntry RunPVP) ][ HH.text "Play PVP" ]
-            ]
+            ],
+        HH.div
+        [style "width:100%; background-color:#2c2f33;"]
+        [HH.input [ HE.onValueChange \s -> Just(ActionEntry(SetName s)) ]
+            ],
+        HH.div
+        [style "width:100%; background-color:#2c2f33;"]
+        [HH.p
+        [style"color:yellow;font:40px Comic Sans;min-width:300px;text-align:center;"] 
+            [ HH.text $ "Wizard name: " <> fromJustString initialEntrystate.name]]
         ]
     render (PVP initialPVPstate) =
      HH.div
