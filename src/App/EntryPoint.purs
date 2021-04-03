@@ -7,11 +7,14 @@ import CSS (StyleM, color)
 import CSS.Color (red, green)
 import Control.Apply (lift2)
 import Control.Monad.State (class MonadState)
+import Data.Argonaut (JsonDecodeError, decodeJson, parseJson, printJsonDecodeError)
 import Data.Array ((!!))
 import Data.DateTime (Time)
+import Data.Either (Either(..))
 import Data.Int (toNumber)
 import Data.Maybe (Maybe(..))
 import Data.String (Pattern(..), joinWith, split)
+import Data.String as String
 import Data.Time (diff)
 import Data.Time.Duration (Milliseconds(..), Seconds(..))
 import Effect.Aff (Aff, Milliseconds(..), delay, error)
@@ -20,6 +23,7 @@ import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (class MonadEffect)
 import Effect.Class.Console (log)
 import Effect.Now (nowTime)
+import EitherHelpers (mapLeft, (<|||>))
 import Halogen (Component, HalogenM, SubscriptionId, liftEffect, unsubscribe)
 import Halogen (SubscriptionId, liftEffect, unsubscribe)
 import Halogen as H
@@ -105,7 +109,7 @@ data Action = ActionEntry ActionEntry | ActionPVE ActionPVE |ActionPVP ActionPVP
 
 data ActionEntry = RunPVE | RunPVP  
 data ActionPVE =  RunEntry | Update | SendInput String | Decrement SubscriptionId
-data ActionPVP=  RunEntrypvp | Updatepvp | SendInputpvp String | Decrementpvp SubscriptionId | ReceiveMessage String
+data ActionPVP=  RunEntrypvp | Updatepvp | SendInputpvp String | Decrementpvp SubscriptionId | ReceiveMessage String | UpdatePlayer2 (Maybe Number) Int | SetPlayerConnected String
 
 --entryComponent :: forall t177 t178 t198 t201. Component HTML t201 t198 t178 t177
 entryComponent :: forall t400 t401 t423 t426. MonadEffect t400 => MonadAff t400 => Component HTML t426 t423 t401 t400
@@ -210,7 +214,13 @@ entryComponent =
               _->do
                pure unit
        RunEntrypvp -> pure unit
-       ReceiveMessage msg -> pure unit
+       ReceiveMessage msg -> do
+        case messageToAction msg of
+            Left err -> liftEffect $ log err
+            Right action -> handleActionPVP action
+       UpdatePlayer2 wpm numberOfCorrectWords -> pure unit
+       SetPlayerConnected name -> pure unit
+        
     
     handleActionPVE = case _ of
         SendInput s ->
@@ -462,3 +472,25 @@ repeatAction emitter t action = aux
     Aff.delay (Milliseconds t)
     ES.emit emitter action
     aux
+
+-- message types:
+type EnemyState = { player2WPM :: Maybe Number, correctWords :: Int }
+type ID = { name :: String }
+
+messageToAction :: String -> Either String ActionPVP
+messageToAction msg = do
+  json <- (parseJson msg) # (describeErr "Failed to parse message as JSON: ")
+  (parseSetPlayer json <|||> parseSetIt json) # describeErrs "Failed to decode JSON:\n"
+  where
+  parseSetPlayer json = do
+    ({player2WPM, correctWords} :: EnemyState) <- decodeJson json
+    pure (UpdatePlayer2 player2WPM  correctWords)
+  parseSetIt json = do
+    ({name} :: ID) <- decodeJson json
+    pure (SetPlayerConnected name)
+
+  describeErr :: forall b.String -> Either JsonDecodeError b -> Either String b
+  describeErr s = mapLeft (\ err -> s <> (printJsonDecodeError err))
+  describeErrs :: forall b.String -> Either (Array JsonDecodeError) b -> Either String b
+  describeErrs s = mapLeft (\ errs -> s <> String.joinWith "\n" (map printJsonDecodeError errs))
+
