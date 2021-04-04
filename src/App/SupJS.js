@@ -8,7 +8,7 @@ exports.disableInputBox = () => {
            return 1;
        };
 
- exports.changeParticleSpeed = (speed,speed2) => {
+ exports.changeParticleSpeed = (speed) => {
      if(speed==null){
         document.getElementById("speedInput").value=3;
      }else{
@@ -20,19 +20,20 @@ exports.disableInputBox = () => {
         }
     document.getElementById("speedInput").value=3+Math.asin(speed*0.01)*(speed/2);
      }
-     if(speed2==null){
-        document.getElementById("speedInputp2").value=3;
-     }else{
-        if(speed2>99){
-            speed2=99;
-            }
-        if(speed2<3){
-            speed2=3;
-            }
-        document.getElementById("speedInputp2").value=3+Math.asin(speed2*0.01)*(speed2/2);
-    }
-           return 1;
-       };
+    };
+exports.changeParticleSpeed2 = (speed) => {
+        if(speed==null){
+           document.getElementById("speedInputp2").value=3;
+        }else{
+           if(speed>99){
+               speed=99;
+               }
+           if(speed<3){
+                speed=3;
+           }
+       document.getElementById("speedInputp2").value=3+Math.asin(speed*0.01)*(speed/2);
+        } 
+    };   
 exports.resizeMagic = (widthAmount) => {
         document.getElementById("magicWidthField").value=widthAmount+50;
            return 1;

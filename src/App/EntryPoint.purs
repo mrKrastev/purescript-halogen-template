@@ -27,14 +27,22 @@ import EitherHelpers (mapLeft, (<|||>))
 import Halogen (Component, HalogenM, SubscriptionId, liftEffect, unsubscribe)
 import Halogen (SubscriptionId, liftEffect, unsubscribe)
 import Halogen as H
-import Halogen.HTML (HTML)
+import Halogen.HTML (HTML, elementNS)
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties (style)
 import Halogen.HTML.Properties as HP
 import Halogen.Query.EventSource (Emitter)
 import Halogen.Query.EventSource as ES
-import SupJS (changeParticleSpeed, cleanInputBox, disableInputBox, fixPVPmagic, fixPVPmagicPositioning, renderMagicJs, renderMagicJsPVP, resizeMagic)
+import SupJS (changeParticleSpeed,
+ cleanInputBox,
+  disableInputBox,
+   fixPVPmagic,
+    fixPVPmagicPositioning,
+     renderMagicJs,
+      renderMagicJsPVP,
+       resizeMagic,
+       changeParticleSpeed2)
 import WSListener (setupWSListener)
 import Web.Socket.WebSocket (WebSocket)
 import Web.Socket.WebSocket as WS
@@ -73,7 +81,8 @@ type PvpState={
               webSocket::WebSocket,
               playerName::String,
               enemyName::String,
-              enemyCorrectWords::Int}
+              enemyCorrectWords::Int,
+              notInitialized::Boolean}
               
 
 updatePVE::(PveState->PveState)-> State->State
@@ -119,7 +128,8 @@ initialPVPstate webSocket name = {wrongWordCounter:0,
               webSocket,
               playerName:name,
               enemyName:"Connecting...",
-              enemyCorrectWords:0}
+              enemyCorrectWords:0,
+              notInitialized:true}
 
 
 data Action = ActionEntry ActionEntry | ActionPVE ActionPVE |ActionPVP ActionPVP 
@@ -198,7 +208,11 @@ entryComponent =
                                     timeDifference = timeDifference,
                                     wpm = myNewWPM,
                                     wrongWordCounter=myNewWrongWordCounter,
-                                    particlesWidth=particlesWidthUpdate}                   
+                                    particlesWidth=particlesWidthUpdate}
+                let player2WPM = myNewWPM
+                let correctWords = myNewWordCounter-myNewWrongWordCounter
+                liftEffect $ WS.sendString pvpState.webSocket $ stringify $ encodeJson {player2WPM,correctWords}
+                                      
                 _<-liftEffect $ cleanInputBox unit
                 pure unit
               _ -> do
@@ -214,11 +228,12 @@ entryComponent =
                 if (pvpState.timer>0) && (pvpState.particlesWidth>(-50.0))
                 then
                 do
-                    log("AHA!")
+                    
                     let newParticlesWidth = pvpState.particlesWidth
                     H.modify_ $ updatePVP \st-> st{ timer = newtimer,particlesWidth=newParticlesWidth,
                                             wpm= Just(calcWPMTimer (((toNumber pvpState.wordCounter))-(toNumber pvpState.wrongWordCounter)) (toNumber newtimer))}
-                    void $ liftEffect $ changeParticleSpeed (fromJustNumber pvpState.wpm) 0.0
+                    --log(show pvpState.enemyWPM)
+                    void $ liftEffect $ changeParticleSpeed (fromJustNumber pvpState.wpm)
                     void $ liftEffect $ (resizeMagic (pvpState.particlesWidth))   
                     else 
                         do 
@@ -234,12 +249,34 @@ entryComponent =
         case messageToAction msg of
             Left err -> liftEffect $ log err
             Right action -> handleActionPVP action
-       UpdatePlayer2 wpm numberOfCorrectWords -> H.modify_ $ updatePVP $ \st->st{enemyWPM=wpm,enemyCorrectWords=numberOfCorrectWords}
-       SetPlayerConnected name -> do
-                                    H.modify_ $ updatePVP $ \st->st{enemyName=name}
-                                   -- mypvpstate <- H.get
-                                   -- liftEffect $ WS.sendString mypvpstate.ws $ stringify $ encodeJson {name}
-
+       UpdatePlayer2 wpm numberOfCorrectWords -> do 
+                                                  log("updatePlayer")
+                                                  H.modify_ $ updatePVP $ \st->st{enemyWPM=wpm,enemyCorrectWords=numberOfCorrectWords}
+                                                  state <- H.get
+                                                  case state of
+                                                      PVP pvpState -> do
+                                                       log(show pvpState.enemyWPM)
+                                                       void $ liftEffect $ changeParticleSpeed2 (fromJustNumber pvpState.enemyWPM)
+                                                       
+                                                      _->do
+                                                       pure unit
+                                                  pure unit
+       SetPlayerConnected enemyID -> do
+                                    state <- H.get
+                                    H.modify_ $ updatePVP $ \st->st{enemyName=enemyID}
+                                    case state of
+                                     PVP pvpState ->do
+                                      if(pvpState.notInitialized)
+                                      then
+                                       do
+                                       log(pvpState.playerName <> "passed")
+                                       let name =  pvpState.playerName
+                                       liftEffect $ WS.sendString pvpState.webSocket $ stringify $ encodeJson {name}
+                                       H.modify_ $ updatePVP $ \st->st{notInitialized=false}
+                                       else
+                                        log(pvpState.playerName <> "did not pass")
+                                     _->do
+                                      pure unit
         
     
     handleActionPVE = case _ of
@@ -299,7 +336,7 @@ entryComponent =
                     let newZombiePosition = pveState.zombiePosition-8.0
                     H.modify_ $ updatePVE \st-> st{ timer = newtimer,zombiePosition=newZombiePosition,
                                             wpm= Just(calcWPMTimer (((toNumber pveState.wordCounter))-(toNumber pveState.wrongWordCounter)) (toNumber newtimer))}
-                    void $ liftEffect $ changeParticleSpeed (fromJustNumber pveState.wpm) 0.0   
+                    void $ liftEffect $ changeParticleSpeed (fromJustNumber pveState.wpm)
 
                     else 
                         do 
