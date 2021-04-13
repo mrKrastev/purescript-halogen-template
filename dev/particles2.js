@@ -645,14 +645,6 @@ var pJS = function(tag_id, params){
       var magic2=document.getElementById("particles-jsp2");
       canvas_el.style.width=magic2;
       document.getElementById("particles-jsp2").style.width=document.getElementById("magicWidthFieldp2").value;
-      if(document.getElementById("magicWidthField").value<100){
-      var elem = document.getElementById("magicfield");
-      if (elem.style.width=="48%" && document.getElementById("magicWidthFieldp2").value!=0){
-        elem.style.width="48.5%";
-      }else{
-        elem.style.width="48%";
-      }
-      }
     }
     pJS.fn.particlesUpdate();
 

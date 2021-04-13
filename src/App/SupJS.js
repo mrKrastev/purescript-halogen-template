@@ -94,7 +94,7 @@ exports.fixPVPmagic = () => {
             document.getElementById("magicfield").style.left="27%";
             document.getElementById("magicfield").style.height="200px";
             document.getElementById("magicfield").style.width="48%";
-            magic1.style.width="40%";
+
 
             return 1;
            };

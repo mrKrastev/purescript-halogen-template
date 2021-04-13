@@ -12,6 +12,7 @@
   , "js-timers"
   , "node-fs-aff"
   , "now"
+  , "numbers"
   , "psci-support"
   , "web-socket"
   ]

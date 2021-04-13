@@ -11,8 +11,9 @@ import Data.Argonaut (JsonDecodeError, decodeJson, encodeJson, parseJson, printJ
 import Data.Array ((!!))
 import Data.DateTime (Time)
 import Data.Either (Either(..))
-import Data.Int (toNumber)
+import Data.Int (fromNumber, toNumber)
 import Data.Maybe (Maybe(..))
+import Data.Number.Format (precision, toStringWith)
 import Data.String (Pattern(..), joinWith, split)
 import Data.String as String
 import Data.Time (diff)
@@ -75,7 +76,8 @@ type PvpState={
               enemyName::String,
               enemyCorrectWords::Int,
               notInitialized::Boolean,
-              readyTimeoutTimer::Int}
+              readyTimeoutTimer::Int,
+              showGameEndModal::Boolean}
               
 
 updatePVE::(PveState->PveState)-> State->State
@@ -111,7 +113,7 @@ initialPVPstate webSocket name = {wrongWordCounter:0,
               myTimeNow:Nothing,
               myFirstTime:Nothing,
               timeDifference:Nothing,
-              timer:60,
+              timer:2,
               timerIsRunning:false,
               wpm:Nothing,
               enemyHp:3.0,
@@ -123,7 +125,8 @@ initialPVPstate webSocket name = {wrongWordCounter:0,
               enemyName:"Connecting...",
               enemyCorrectWords:0,
               notInitialized:true,
-              readyTimeoutTimer:10}
+              readyTimeoutTimer:2,
+              showGameEndModal:false}
 
 
 data Action = ActionEntry ActionEntry | ActionPVE ActionPVE |ActionPVP ActionPVP 
@@ -236,9 +239,8 @@ entryComponent =
                     else 
                         do 
                         unsubscribe sid
+                        H.modify_ $ updatePVP $ \st->st{showGameEndModal=true}
                         _<-liftEffect $ disableInputBox unit
-                        let timeDifference = sixtySec 60
-                        H.modify_ $ updatePVP $ \st->st{wpm=calcWPM (pvpState.wordCounter-pvpState.wrongWordCounter) (Just(timeDifference))}
                         pure unit
               _->do
                pure unit
@@ -413,6 +415,28 @@ entryComponent =
         [HH.p
         [style $ timerVisibility initialPVPstate.readyTimeoutTimer] 
             [ HH.text $ "Battle Starts In: " <> show initialPVPstate.readyTimeoutTimer]
+          ,HH.div
+        [style $ modalCSS initialPVPstate.showGameEndModal][
+            HH.p
+            [style $ battleOutcomeTitle "draw"] 
+            [ HH.text "Draw"],
+            HH.div[style"position:relative;width:100%;height:200px;"][
+            HH.p
+            [style "width:150px;float:left;font-size:40px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;padding-left:20px;"] 
+            [ HH.text $ "WPM: " <> toStringWith (precision 3 ) (fromJustNumber initialPVPstate.wpm)]
+            ,HH.p
+            [style "width:150px;float:right;font-size:40px;color:red;text-shadow: 0px 0px 5px #555;margin:10px;padding-right:30px;"] 
+            [ HH.text $ "WPM: " <> toStringWith (precision 3 ) (fromJustNumber initialPVPstate.enemyWPM)]
+            ],
+            HH.div[style"position:relative;width:100%;height:200px;"][
+            HH.p
+            [style "width:150px;float:left;font-size:40px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;padding-left:20px;"] 
+            [ HH.text $ "Correct Words: " <> show (initialPVPstate.wordCounter-initialPVPstate.wrongWordCounter)]
+            ,HH.p
+            [style "width:150px;float:right;font-size:40px;color:red;text-shadow: 0px 0px 5px #555;margin:10px;padding-right:30px;"] 
+            [ HH.text $ "Correct Words: " <> show initialPVPstate.enemyCorrectWords]
+            ]
+        ]
           ,HH.div  
         [style"display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%"]
         [HH.div  
@@ -519,10 +543,16 @@ fixPVPmagicRender :: forall t30. Bind t30 => MonadEffect t30 => t30 Unit
 fixPVPmagicRender = do
                 _<-liftEffect $ renderMagicJsPVP unit
                 pure unit
+--CSS kek------------------------------------------------------------------------------------------------------------------------------
 
+modalCSS :: Boolean -> String
+modalCSS flag
+ | flag == true = "width:50%; height:wrap-content;left:25%;top:20%;z-index:999; position:absolute;background-color:#23272a;display:block;justify-content:space-between;overflow:wrap;"
+ | otherwise = "width:50%; height:wrap-content;left:25%;top:20%;z-index:999; position:absolute;background-color:#23272a;display:none;"
 
-
-
+battleOutcomeTitle outcome 
+ | outcome == "draw" = "width:100%;margin: 50px auto;text-align: center;text-shadow: -1px -1px 0px rgba(255,255,255,0.3), 1px 1px 0px rgba(0,0,0,0.8);color:rgba(75, 119, 190, 1);opacity: 1;font: 700 80px 'Bitter'"
+ | otherwise ="margin:width:100%; 50px auto;text-align: center;text-shadow: -1px -1px 0px rgba(255,255,255,0.3), 1px 1px 0px rgba(0,0,0,0.8);color: #333;opacity: 0.4;font: 700 80px 'Bitter'"
 -- pure functions --------------------------------------------------------------------------------------------------------------------
 calculateMagicPush::Int->Int->Number
 calculateMagicPush p1Words p2Words
