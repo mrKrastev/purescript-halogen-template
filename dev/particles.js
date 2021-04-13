@@ -641,18 +641,19 @@ var pJS = function(tag_id, params){
 
     /* update each particles param */
     pJS.particles.move.speed=document.getElementById("speedInput").value;
-    if(document.getElementById("magicWidthField").value>-150){
       //pJS.canvas.style.offsetWidth=document.getElementById("magicWidthField").value;
       var previousWidth = document.getElementById("particles-js").style.width;
-      canvas_el.style.width=document.getElementById("magicWidthField").value.toString()+"px";
+      //canvas_el.style.width=document.getElementById("magicWidthField").value.toString()+"px";
+      var magic2=document.getElementById("particles-js");
+      canvas_el.style.width=magic2;
+      document.getElementById("particles-js").style.width=document.getElementById("magicWidthField").value.toString()+"px";
       try {
         document.getElementById("magicWidthFieldp2").value=previousWidth+(canvas_el.style.width-previousWidth);
       } catch (error) {
         
       }
-      //pJS.canvas.w=document.getElementById("magicWidthField").value;
+      //pJS.canvas.w="1000px";
       
-    }
     pJS.fn.particlesUpdate();
 
     /* draw each particle */

@@ -34,15 +34,7 @@ import Halogen.HTML.Properties (style)
 import Halogen.HTML.Properties as HP
 import Halogen.Query.EventSource (Emitter)
 import Halogen.Query.EventSource as ES
-import SupJS (changeParticleSpeed,
- cleanInputBox,
-  disableInputBox,
-   fixPVPmagic,
-    fixPVPmagicPositioning,
-     renderMagicJs,
-      renderMagicJsPVP,
-       resizeMagic,
-       changeParticleSpeed2)
+import SupJS (startGame, changeParticleSpeed, changeParticleSpeedandWidth, cleanInputBox, disableInputBox, fixPVPmagic, fixPVPmagicPositioning, renderMagicJs, renderMagicJsPVP, resizeMagic, changeParticleSpeed2)
 import WSListener (setupWSListener)
 import Web.Socket.WebSocket (WebSocket)
 import Web.Socket.WebSocket as WS
@@ -82,7 +74,8 @@ type PvpState={
               playerName::String,
               enemyName::String,
               enemyCorrectWords::Int,
-              notInitialized::Boolean}
+              notInitialized::Boolean,
+              readyTimeoutTimer::Int}
               
 
 updatePVE::(PveState->PveState)-> State->State
@@ -107,7 +100,7 @@ initialPVEstate = {wpm:Nothing,
     myFirstTime: Nothing,
     timeDifference:Nothing,
     zombiePosition: 350.0,
-    particlesWidth:350.0}
+    particlesWidth:400.0}
 
 initialEntrystate::EntryState
 initialEntrystate = {name:Nothing}
@@ -129,7 +122,8 @@ initialPVPstate webSocket name = {wrongWordCounter:0,
               playerName:name,
               enemyName:"Connecting...",
               enemyCorrectWords:0,
-              notInitialized:true}
+              notInitialized:true,
+              readyTimeoutTimer:10}
 
 
 data Action = ActionEntry ActionEntry | ActionPVE ActionPVE |ActionPVP ActionPVP 
@@ -137,7 +131,7 @@ data Action = ActionEntry ActionEntry | ActionPVE ActionPVE |ActionPVP ActionPVP
 
 data ActionEntry = RunPVE | RunPVP String  | SetName String
 data ActionPVE =  RunEntry | Update | SendInput String | Decrement SubscriptionId
-data ActionPVP=  RunEntrypvp | Updatepvp | SendInputpvp String | Decrementpvp SubscriptionId | ReceiveMessage String | UpdatePlayer2 (Maybe Number) Int | SetPlayerConnected String
+data ActionPVP=  RunEntrypvp | Updatepvp SubscriptionId | SendInputpvp String |DecrementInitialTimer SubscriptionId | Decrementpvp SubscriptionId | ReceiveMessage String | UpdatePlayer2 (Maybe Number) Int | SetPlayerConnected String
 
 --entryComponent :: forall t177 t178 t198 t201. Component HTML t201 t198 t178 t177
 entryComponent :: forall t400 t401 t423 t426. MonadEffect t400 => MonadAff t400 => Component HTML t426 t423 t401 t400
@@ -182,14 +176,7 @@ entryComponent =
                 log(show pvpState.timerIsRunning)
                 if pvpState.timerIsRunning==false
                 then
-                    do
-                    mynowtime <- liftEffect nowTime
-                    H.modify_ $ updatePVP $ \st->st{ timerIsRunning= true,myFirstTime=Just mynowtime}
-                    _ <- H.subscribe' \sid->
-                      ES.affEventSource \emitter -> do
-                        _ <- Aff.forkAff $ repeatAction emitter 1000.0 (ActionPVP (Decrementpvp sid)) 
-                        pure mempty
-                    pure unit
+                pure unit
                 else 
                     pure unit
             
@@ -199,7 +186,9 @@ entryComponent =
                 let myText =fromJustString (myWords !!pvpState.wordCounter)
                 let myNewWrongWordCounter=pvpState.wrongWordCounter+incrementor s myText
                 let myNewWPM = calcWPM (myNewWordCounter-myNewWrongWordCounter) timeDifference
+                let correctWords = myNewWordCounter-myNewWrongWordCounter
                 let particlesWidthUpdate = pvpState.particlesWidth+magicPushCalculator s myText
+                --let particlesWidthUpdate = calculateMagicPush  (correctWords) (pvpState.enemyCorrectWords) (pvpState.particlesWidth)
                 let newMagic=(resizeMagic (pvpState.particlesWidth))
                 pure unit
                 H.modify_ $ updatePVP \st -> st{
@@ -210,31 +199,40 @@ entryComponent =
                                     wrongWordCounter=myNewWrongWordCounter,
                                     particlesWidth=particlesWidthUpdate}
                 let player2WPM = myNewWPM
-                let correctWords = myNewWordCounter-myNewWrongWordCounter
-                liftEffect $ WS.sendString pvpState.webSocket $ stringify $ encodeJson {player2WPM,correctWords}
+                --let correctWords = myNewWordCounter-myNewWrongWordCounter
+                --liftEffect $ WS.sendString pvpState.webSocket $ stringify $ encodeJson {player2WPM,correctWords}
                                       
                 _<-liftEffect $ cleanInputBox unit
                 pure unit
               _ -> do
                 pure unit
             
-       Updatepvp ->pure unit
-       --fixPVPmagicRender
+       Updatepvp sid ->do
+            state <- H.get
+            case state of
+             PVP pvpState -> do
+              let player2WPM = pvpState.wpm
+              let correctWords = (pvpState.wordCounter - pvpState.wrongWordCounter)
+              liftEffect $ WS.sendString pvpState.webSocket $ stringify $ encodeJson {player2WPM,correctWords}
+              let newMagic=(resizeMagic (pvpState.particlesWidth))
+              pure unit
+             _ -> pure unit
        Decrementpvp sid -> do
             state <- H.get
             case state of
               PVP pvpState ->do 
                 let newtimer = pvpState.timer - 1        
-                if (pvpState.timer>0) && (pvpState.particlesWidth>(-50.0))
+                if (pvpState.timer>0) && ((pvpState.particlesWidth>(-200.0) && (pvpState.particlesWidth<(900.0))))
                 then
                 do
                     
                     let newParticlesWidth = pvpState.particlesWidth
+                    
                     H.modify_ $ updatePVP \st-> st{ timer = newtimer,particlesWidth=newParticlesWidth,
                                             wpm= Just(calcWPMTimer (((toNumber pvpState.wordCounter))-(toNumber pvpState.wrongWordCounter)) (toNumber newtimer))}
-                    --log(show pvpState.enemyWPM)
+                   -- liftEffect $ WS.sendString pvpState.webSocket $ stringify $ encodeJson {pvp,correctWords}
                     void $ liftEffect $ changeParticleSpeed (fromJustNumber pvpState.wpm)
-                    void $ liftEffect $ (resizeMagic (pvpState.particlesWidth))   
+                   -- void $ liftEffect $ (resizeMagic (pvpState.particlesWidth))   
                     else 
                         do 
                         unsubscribe sid
@@ -244,6 +242,33 @@ entryComponent =
                         pure unit
               _->do
                pure unit
+       DecrementInitialTimer sid -> do
+            state <- H.get
+            case state of
+              PVP pvpState ->do 
+                let newTimeoutTimer = pvpState.readyTimeoutTimer - 1        
+                if (pvpState.readyTimeoutTimer>0)
+                then
+                do
+                    H.modify_ $ updatePVP \st-> st{ readyTimeoutTimer = newTimeoutTimer}  
+                    else 
+                        do 
+                        unsubscribe sid
+                        mynowtime <- liftEffect nowTime
+                        H.modify_ $ updatePVP $ \st->st{ timerIsRunning= true,myFirstTime=Just mynowtime}
+                        _ <- H.subscribe' \sid2->
+                         ES.affEventSource \emitter -> do
+                         _ <- Aff.forkAff $ repeatAction emitter 1000.0 (ActionPVP (Decrementpvp sid2)) 
+                         pure mempty
+                        _ <- H.subscribe' \sid3->
+                         ES.affEventSource \emitter -> do
+                         _ <- Aff.forkAff $ repeatAction emitter 100.0 (ActionPVP (Updatepvp sid3)) 
+                         pure mempty
+                        pure unit
+                        _<-liftEffect $ startGame unit
+                        pure unit
+              _->do
+               pure unit       
        RunEntrypvp -> pure unit
        ReceiveMessage msg -> do
         case messageToAction msg of
@@ -251,11 +276,18 @@ entryComponent =
             Right action -> handleActionPVP action
        UpdatePlayer2 wpm numberOfCorrectWords -> do 
                                                   log("updatePlayer")
-                                                  H.modify_ $ updatePVP $ \st->st{enemyWPM=wpm,enemyCorrectWords=numberOfCorrectWords}
+                                                  
                                                   state <- H.get
                                                   case state of
                                                       PVP pvpState -> do
+                                                       let previousEnemyCorrectWords=pvpState.enemyCorrectWords
+                                                       log(show previousEnemyCorrectWords <> "second val :"<> show numberOfCorrectWords)
+                                                       let updatedParticlesWidth = pvpState.particlesWidth + (calculateMagicPush previousEnemyCorrectWords numberOfCorrectWords)
+                                                       log(show updatedParticlesWidth)
+                                                       H.modify_ $ updatePVP $ \st->st{particlesWidth=updatedParticlesWidth,enemyWPM=wpm,enemyCorrectWords=numberOfCorrectWords}
                                                        log(show pvpState.enemyWPM)
+                                                       --void $ liftEffect $ changeParticleSpeedandWidth (fromJustNumber pvpState.enemyWPM) (pvpState.particlesWidth)
+                                                       -- $ liftEffect $ (resizeMagic (pvpState.particlesWidth))  
                                                        void $ liftEffect $ changeParticleSpeed2 (fromJustNumber pvpState.enemyWPM)
                                                        
                                                       _->do
@@ -273,6 +305,11 @@ entryComponent =
                                        let name =  pvpState.playerName
                                        liftEffect $ WS.sendString pvpState.webSocket $ stringify $ encodeJson {name}
                                        H.modify_ $ updatePVP $ \st->st{notInitialized=false}
+                                       _ <- H.subscribe' \sid->
+                                        ES.affEventSource \emitter -> do
+                                        _ <- Aff.forkAff $ repeatAction emitter 1000.0 (ActionPVP (DecrementInitialTimer sid)) 
+                                        pure mempty
+                                       pure unit
                                        else
                                         log(pvpState.playerName <> "did not pass")
                                      _->do
@@ -362,7 +399,7 @@ entryComponent =
             ],
         HH.div
         [style "width:100%; background-color:#2c2f33;"]
-        [HH.input [ HE.onValueChange \s -> Just(ActionEntry(SetName s)) ]
+        [HH.input [ HE.onValueInput \s -> Just(ActionEntry(SetName s)) ]
             ],
         HH.div
         [style "width:100%; background-color:#2c2f33;"]
@@ -373,8 +410,10 @@ entryComponent =
     render (PVP initialPVPstate) =
      HH.div
         [style "width:70%; background-color:#2c2f33;"]
-        [
-          HH.div  
+        [HH.p
+        [style $ timerVisibility initialPVPstate.readyTimeoutTimer] 
+            [ HH.text $ "Battle Starts In: " <> show initialPVPstate.readyTimeoutTimer]
+          ,HH.div  
         [style"display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%"]
         [HH.div  
         [style"display:inline-flex;width:100%;justify-self:center;margin-top:10%;background-color:transparent;"]
@@ -409,7 +448,6 @@ entryComponent =
         ,HH.input
             [ HP.id_ "inp",
             HE.onValueChange \s -> Just (ActionPVP (SendInputpvp s)),
-            HE.onFocus \s -> Just (ActionPVP (Updatepvp)),
             style " color:white; height:50px;width:150px; margin-left:20%; margin-top:5%; margin-bottom:10%;font-size:24px;border-color:orange;background-color:transparent;"
             ]
         ,HH.p
@@ -486,7 +524,10 @@ fixPVPmagicRender = do
 
 
 -- pure functions --------------------------------------------------------------------------------------------------------------------
-
+calculateMagicPush::Int->Int->Number
+calculateMagicPush p1Words p2Words
+    | p1Words < p2Words = -10.0
+    | otherwise = 0.0
 fromJustString :: Maybe String -> String
 fromJustString Nothing = ""
 fromJustString (Just s) = s
@@ -517,6 +558,10 @@ wrongWordIndicator state
     | otherwise = color red
     
 
+timerVisibility :: Int -> String
+timerVisibility timer
+    | timer > 0 = "position:absolute;left:40%;color:yellow;font:40px Comic Sans;min-width:300px;text-align:center;visibility:visible;"
+    | otherwise = "position:absolute;left:40%;color:yellow;font:40px Comic Sans;min-width:300px;text-align:center;visibility:hidden;"
 incrementor :: forall t8. Eq t8 => t8 -> t8 -> Int
 incrementor input word
     | input == word = 0
@@ -529,7 +574,7 @@ zombiePushValue input word
 magicPushCalculator :: forall t8. Eq t8 => t8 -> t8 -> Number
 magicPushCalculator input word
     | input == word = 10.0
-    | otherwise = -10.0
+    | otherwise = 0.0
 
 myParagraph :: String
 myParagraph = "The world of Dark Souls is a world of cycles. Kingdoms rise and fall, ages come and go, and even time can end and restart as the flame fades and is renewed. These cycles are linked to the First Flame, a mysterious manifestation of life that divides and defines separate states such as heat and cold, or life and death. As the First Flame fades, these differences also begin to fade, such as life and death having little distinction, and humans becoming Undead. The onset of an Age of Dark, the time when the First Flame has fully died, is marked by endless nights, rampant undeath, time, space, and reality breaking down, lands collapsing and converging on one another, people mutating into monsters, darkness covering the world, and the Gods losing their power. To avoid this and prolong the Age of Fire, the bearer of a powerful soul must 'link' themselves to the First Flame, becoming the fuel for another age. If this is not done, the First Flame will eventually die, and an Age of Dark will begin."
