@@ -52,7 +52,9 @@ type PveState={
               timerIsRunning::Boolean,
               wpm::Maybe Number,
               zombiePosition::Number,
-              particlesWidth::Number}
+              particlesWidth::Number,
+              showGameEndModal::Boolean,
+              combatOutcome::String}
 
 type EntryState={  
               name::Maybe String
@@ -67,8 +69,6 @@ type PvpState={
               timer::Int,
               timerIsRunning::Boolean,
               wpm::Maybe Number,
-              enemyHp::Number,
-              playerHp::Number,
               particlesWidth::Number,
               enemyWPM::Maybe Number,
               webSocket::WebSocket,
@@ -77,7 +77,8 @@ type PvpState={
               enemyCorrectWords::Int,
               notInitialized::Boolean,
               readyTimeoutTimer::Int,
-              showGameEndModal::Boolean}
+              showGameEndModal::Boolean,
+              combatOutcome::String}
               
 
 updatePVE::(PveState->PveState)-> State->State
@@ -102,7 +103,9 @@ initialPVEstate = {wpm:Nothing,
     myFirstTime: Nothing,
     timeDifference:Nothing,
     zombiePosition: 350.0,
-    particlesWidth:400.0}
+    particlesWidth:400.0,
+    showGameEndModal:false,
+    combatOutcome:"Win"}
 
 initialEntrystate::EntryState
 initialEntrystate = {name:Nothing}
@@ -113,11 +116,9 @@ initialPVPstate webSocket name = {wrongWordCounter:0,
               myTimeNow:Nothing,
               myFirstTime:Nothing,
               timeDifference:Nothing,
-              timer:2,
+              timer:60,
               timerIsRunning:false,
               wpm:Nothing,
-              enemyHp:3.0,
-              playerHp:3.0,
               particlesWidth:350.0,
               enemyWPM:Nothing,
               webSocket,
@@ -126,7 +127,8 @@ initialPVPstate webSocket name = {wrongWordCounter:0,
               enemyCorrectWords:0,
               notInitialized:true,
               readyTimeoutTimer:2,
-              showGameEndModal:false}
+              showGameEndModal:false,
+              combatOutcome:"Draw"}
 
 
 data Action = ActionEntry ActionEntry | ActionPVE ActionPVE |ActionPVP ActionPVP 
@@ -239,7 +241,9 @@ entryComponent =
                     else 
                         do 
                         unsubscribe sid
-                        H.modify_ $ updatePVP $ \st->st{showGameEndModal=true}
+                        let myCorrectWords =pvpState.wordCounter-pvpState.wrongWordCounter
+                        let outcome = decideWinner myCorrectWords pvpState.enemyCorrectWords (wpmSetup pvpState.wpm) (wpmSetup pvpState.enemyWPM)
+                        H.modify_ $ updatePVP $ \st->st{showGameEndModal=true,combatOutcome=outcome}
                         _<-liftEffect $ disableInputBox unit
                         pure unit
               _->do
@@ -380,9 +384,12 @@ entryComponent =
                     else 
                         do 
                         unsubscribe sid
-                        _<-liftEffect $ disableInputBox unit
+                        if pveState.zombiePosition <= -50.0 then do
+                          H.modify_ $ updatePVE $ \st->st{combatOutcome="Loss",showGameEndModal=true}
+                        else H.modify_ $ updatePVE $ \st->st{showGameEndModal=true}
                         let timeDifference = sixtySec 60
                         H.modify_ $ updatePVE $ \st->st{wpm=calcWPM (pveState.wordCounter-pveState.wrongWordCounter) (Just(timeDifference))}
+                        _<-liftEffect $ disableInputBox unit
                         pure unit
               _->do
                pure unit
@@ -418,24 +425,28 @@ entryComponent =
           ,HH.div
         [style $ modalCSS initialPVPstate.showGameEndModal][
             HH.p
-            [style $ battleOutcomeTitle "draw"] 
-            [ HH.text "Draw"],
+            [style $ battleOutcomeTitle initialPVPstate.combatOutcome] 
+            [ HH.text initialPVPstate.combatOutcome],
             HH.div[style"position:relative;width:100%;height:200px;"][
             HH.p
-            [style "width:150px;float:left;font-size:40px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;padding-left:20px;"] 
+            [style "width:300px;float:left;font-size:40px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;padding-left:20px;"] 
             [ HH.text $ "WPM: " <> toStringWith (precision 3 ) (fromJustNumber initialPVPstate.wpm)]
             ,HH.p
-            [style "width:150px;float:right;font-size:40px;color:red;text-shadow: 0px 0px 5px #555;margin:10px;padding-right:30px;"] 
+            [style "width:300px;float:right;font-size:40px;color:red;text-shadow: 0px 0px 5px #555;margin:10px;padding-right:30px;"] 
             [ HH.text $ "WPM: " <> toStringWith (precision 3 ) (fromJustNumber initialPVPstate.enemyWPM)]
             ],
             HH.div[style"position:relative;width:100%;height:200px;"][
             HH.p
-            [style "width:150px;float:left;font-size:40px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;padding-left:20px;"] 
+            [style "width:300px;float:left;font-size:40px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;padding-left:20px;"] 
             [ HH.text $ "Correct Words: " <> show (initialPVPstate.wordCounter-initialPVPstate.wrongWordCounter)]
             ,HH.p
-            [style "width:150px;float:right;font-size:40px;color:red;text-shadow: 0px 0px 5px #555;margin:10px;padding-right:30px;"] 
+            [style "width:300px;float:right;font-size:40px;color:red;text-shadow: 0px 0px 5px #555;margin:10px;padding-right:30px;"] 
             [ HH.text $ "Correct Words: " <> show initialPVPstate.enemyCorrectWords]
-            ]
+            ],
+            HH.div[style"position:relative;width:100%;height:200px;"][
+            HH.p
+            [style "width:100%;font-size:30px;color:orange;text-shadow: 0px 0px 5px #555;margin:10px;"] 
+            [ HH.text $ generateFlavourText (wpmSetup initialPVPstate.wpm) (wpmSetup initialPVPstate.enemyWPM)]]
         ]
           ,HH.div  
         [style"display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%"]
@@ -488,8 +499,28 @@ entryComponent =
     render (PVE initialPVEstate)  =
      HH.div
      [style "width:50%; background-color:#2c2f33;"]
-     [
-        HH.div  
+     [HH.div
+        [style $ modalCSS initialPVEstate.showGameEndModal][
+            HH.p
+            [style $ pveOutcome initialPVEstate.combatOutcome] 
+            [ HH.text initialPVEstate.combatOutcome],
+            HH.div[style"position:relative;width:100%;height:150px;"][
+            HH.p
+            [style "width:300px;float:left;font-size:30px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;padding-left:20px;"] 
+            [ HH.text $ "WPM: " <> toStringWith (precision 3 ) (fromJustNumber initialPVEstate.wpm)]
+            ],
+            HH.div[style"position:relative;width:100%;height:150px;"][
+            HH.p
+            [style "width:300px;float:left;font-size:30px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;padding-left:20px;"] 
+            [ HH.text $ "Correct Words: " <> show (initialPVEstate.wordCounter-initialPVEstate.wrongWordCounter)]
+            ],
+            HH.div[style"position:relative;width:100%;height:200px;"][
+            HH.p
+            [style "width:100%;font-size:20px;color:orange;text-shadow: 0px 0px 5px #555;margin:10px;"] 
+            [ HH.text $ "You typed " <> (toStringWith (precision 3) (fromJustNumber(initialPVEstate.wpm)/60.0)) <> " in a second!" ]
+            ]
+            ]
+        ,HH.div  
         [style"display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%"]
         [HH.div  
         [style"display:inline-flex;width:100%;justify-self:center;margin-top:10%;background-color:transparent;"]
@@ -547,13 +578,38 @@ fixPVPmagicRender = do
 
 modalCSS :: Boolean -> String
 modalCSS flag
- | flag == true = "width:50%; height:wrap-content;left:25%;top:20%;z-index:999; position:absolute;background-color:#23272a;display:block;justify-content:space-between;overflow:wrap;"
- | otherwise = "width:50%; height:wrap-content;left:25%;top:20%;z-index:999; position:absolute;background-color:#23272a;display:none;"
+ | flag == true = "width:50%; height:wrap-content;left:25%;top:15%;z-index:999; position:absolute;background-color:#23272a;display:block;justify-content:space-between;overflow:wrap;"
+ | otherwise = "width:50%; height:wrap-content;left:25%;top:15%;z-index:999; position:absolute;background-color:#23272a;display:none;"
 
+battleOutcomeTitle :: String -> String
 battleOutcomeTitle outcome 
- | outcome == "draw" = "width:100%;margin: 50px auto;text-align: center;text-shadow: -1px -1px 0px rgba(255,255,255,0.3), 1px 1px 0px rgba(0,0,0,0.8);color:rgba(75, 119, 190, 1);opacity: 1;font: 700 80px 'Bitter'"
- | otherwise ="margin:width:100%; 50px auto;text-align: center;text-shadow: -1px -1px 0px rgba(255,255,255,0.3), 1px 1px 0px rgba(0,0,0,0.8);color: #333;opacity: 0.4;font: 700 80px 'Bitter'"
+ | outcome == "Victory" = "width:100%;margin: 50px auto;text-align: center;text-shadow: -1px -1px 0px rgba(255,255,255,0.3), 1px 1px 0px rgba(0,0,0,0.8);color:rgba(30, 130, 76, 1);opacity: 1;font: 700 80px 'Bitter'"
+ | outcome == "Defeat" = "width:100%;margin: 50px auto;text-align: center;text-shadow: -1px -1px 0px rgba(255,255,255,0.3), 1px 1px 0px rgba(0,0,0,0.8);color:rgba(150, 40, 27, 1);opacity: 1;font: 700 80px 'Bitter'"
+ | otherwise =":width:100%;margin: 50px auto;text-align: center;text-shadow: -1px -1px 0px rgba(255,255,255,0.3), 1px 1px 0px rgba(0,0,0,0.8);color:rgba(75, 119, 190, 1);opacity: 1;font: 700 80px 'Bitter'"
+
+pveOutcome :: String -> String
+pveOutcome outcome 
+ | outcome == "Win" = "width:100%;margin: 50px auto;text-align: center;text-shadow: -1px -1px 0px rgba(255,255,255,0.3), 1px 1px 0px rgba(0,0,0,0.8);color:rgba(30, 130, 76, 1);opacity: 1;font: 700 80px 'Bitter'"
+ | otherwise = "width:100%;margin: 50px auto;text-align: center;text-shadow: -1px -1px 0px rgba(255,255,255,0.3), 1px 1px 0px rgba(0,0,0,0.8);color:rgba(150, 40, 27, 1);opacity: 1;font: 700 80px 'Bitter'"
+
+
+
 -- pure functions --------------------------------------------------------------------------------------------------------------------
+
+
+decideWinner :: forall t113 t115. Ord t113 => Ord t115 => Ord t115 => t113 -> t113 -> t115 -> t115 -> String
+decideWinner p1Words p2Words p1WPM p2WPM
+    | p1Words>p2Words = "Victory"
+    | p1Words<p2Words = "Defeat"
+    | p1WPM>p2WPM = "Victory"
+    | p1WPM<p2WPM = "Defeat"
+    | otherwise = "Draw"
+    
+generateFlavourText wpm1 wpm2
+ | wpm1 > wpm2 = "You were "<> toStringWith (precision 3) (((wpm1/wpm2)-1.0)*100.0) <> "% faster than your opponent!"
+ | wpm1 < wpm2 = "You were "<> toStringWith (precision 3) (((wpm2/wpm1)-1.0)*100.0) <> "% slower than your opponent!"
+ | otherwise = "Your magical power levels are matching!"
+
 calculateMagicPush::Int->Int->Number
 calculateMagicPush p1Words p2Words
     | p1Words < p2Words = -10.0
@@ -566,8 +622,12 @@ fromJustNumber :: Maybe Number -> Number
 fromJustNumber Nothing = 1.0
 fromJustNumber (Just s) = s
 
+wpmSetup :: Maybe Number -> Number
+wpmSetup Nothing = 0.0
+wpmSetup (Just s) = s
+
 calcWPM:: Int-> Maybe Seconds -> Maybe Number
-calcWPM wordsCount (Just(Seconds sec)) = Just( ((toNumber wordsCount) / sec) * toNumber 60 )
+calcWPM wordsCount (Just(Seconds sec)) = Just( ((toNumber wordsCount) / sec) * 60.0 )
 calcWPM wordsCount Nothing = Nothing
 
 calcWPMTimer::Number-> Number -> Number
