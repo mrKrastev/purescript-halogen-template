@@ -13,7 +13,11 @@
   , "node-fs-aff"
   , "now"
   , "numbers"
+  , "parseint"
   , "psci-support"
+  , "random"
+  , "run"
+  , "unfoldable"
   , "web-socket"
   ]
 , packages = ./packages.dhall

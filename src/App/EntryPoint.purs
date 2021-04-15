@@ -8,22 +8,27 @@ import CSS.Color (red, green)
 import Control.Apply (lift2)
 import Control.Monad.State (class MonadState)
 import Data.Argonaut (JsonDecodeError, decodeJson, encodeJson, parseJson, printJsonDecodeError, stringify)
+import Data.Argonaut as Console
 import Data.Array ((!!))
 import Data.DateTime (Time)
 import Data.Either (Either(..))
 import Data.Int (fromNumber, toNumber)
+import Data.Int.Parse (parseInt)
 import Data.Maybe (Maybe(..))
 import Data.Number.Format (precision, toStringWith)
 import Data.String (Pattern(..), joinWith, split)
 import Data.String as String
 import Data.Time (diff)
 import Data.Time.Duration (Milliseconds(..), Seconds(..))
+import Data.Unfoldable (replicate)
+import Effect (Effect)
 import Effect.Aff (Aff, Milliseconds(..), delay, error)
 import Effect.Aff as Aff
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (class MonadEffect)
 import Effect.Class.Console (log)
 import Effect.Now (nowTime)
+import Effect.Random (randomInt)
 import EitherHelpers (mapLeft, (<|||>))
 import Halogen (Component, HalogenM, SubscriptionId, liftEffect, unsubscribe)
 import Halogen (SubscriptionId, liftEffect, unsubscribe)
@@ -35,6 +40,7 @@ import Halogen.HTML.Properties (style)
 import Halogen.HTML.Properties as HP
 import Halogen.Query.EventSource (Emitter)
 import Halogen.Query.EventSource as ES
+import Run (runPure)
 import SupJS (startGame, changeParticleSpeed, changeParticleSpeedandWidth, cleanInputBox, disableInputBox, fixPVPmagic, fixPVPmagicPositioning, renderMagicJs, renderMagicJsPVP, resizeMagic, changeParticleSpeed2)
 import WSListener (setupWSListener)
 import Web.Socket.WebSocket (WebSocket)
@@ -78,7 +84,10 @@ type PvpState={
               notInitialized::Boolean,
               readyTimeoutTimer::Int,
               showGameEndModal::Boolean,
-              combatOutcome::String}
+              combatOutcome::String,
+              hasOpponent::Boolean,
+              opponentID::Maybe String,
+              myID::String}
               
 
 updatePVE::(PveState->PveState)-> State->State
@@ -110,8 +119,8 @@ initialPVEstate = {wpm:Nothing,
 initialEntrystate::EntryState
 initialEntrystate = {name:Nothing}
 
-initialPVPstate::WebSocket->String->PvpState
-initialPVPstate webSocket name = {wrongWordCounter:0,
+initialPVPstate::WebSocket->String->String->PvpState
+initialPVPstate webSocket name id = {wrongWordCounter:0,
               wordCounter:0,
               myTimeNow:Nothing,
               myFirstTime:Nothing,
@@ -128,7 +137,10 @@ initialPVPstate webSocket name = {wrongWordCounter:0,
               notInitialized:true,
               readyTimeoutTimer:2,
               showGameEndModal:false,
-              combatOutcome:"Draw"}
+              combatOutcome:"Draw",
+              hasOpponent:false,
+              opponentID:Nothing,
+              myID:id}
 
 
 data Action = ActionEntry ActionEntry | ActionPVE ActionPVE |ActionPVP ActionPVP 
@@ -136,7 +148,7 @@ data Action = ActionEntry ActionEntry | ActionPVE ActionPVE |ActionPVP ActionPVP
 
 data ActionEntry = RunPVE | RunPVP String  | SetName String
 data ActionPVE =  RunEntry | Update | SendInput String | Decrement SubscriptionId
-data ActionPVP=  RunEntrypvp | Updatepvp SubscriptionId | SendInputpvp String |DecrementInitialTimer SubscriptionId | Decrementpvp SubscriptionId | ReceiveMessage String | UpdatePlayer2 (Maybe Number) Int | SetPlayerConnected String
+data ActionPVP=  RunEntrypvp | Updatepvp SubscriptionId | SendInputpvp String |DecrementInitialTimer SubscriptionId | Decrementpvp SubscriptionId | ReceiveMessage String | UpdatePlayer2 (Maybe Number) Int | SetPlayerConnected String String 
 
 --entryComponent :: forall t177 t178 t198 t201. Component HTML t201 t198 t178 t177
 entryComponent :: forall t400 t401 t423 t426. MonadEffect t400 => MonadAff t400 => Component HTML t426 t423 t401 t400
@@ -165,8 +177,10 @@ entryComponent =
                 setupWSListener ws (\msg -> ES.emit emitter (ActionPVP $ ReceiveMessage msg))
              pure $ ES.Finalizer do
                 Aff.killFiber (error "Event source finalized") fiber
-            liftEffect $ WS.sendString ws $ stringify $ encodeJson {name}
-            H.put (PVP (initialPVPstate ws name))
+            myid <- liftEffect $ generateRandomNumber
+            H.put (PVP (initialPVPstate ws name (show myid)))
+            let playerID = show myid
+            liftEffect $ WS.sendString ws $ stringify $ encodeJson {playerID,name}
             void $ liftEffect $ fixPVPmagic unit
             pure unit
         SetName s -> H.modify_ $ updateName $ \st->st{name=Just(s)}
@@ -299,17 +313,18 @@ entryComponent =
                                                       _->do
                                                        pure unit
                                                   pure unit
-       SetPlayerConnected enemyID -> do
+       SetPlayerConnected id opponentName  -> do
                                     state <- H.get
-                                    H.modify_ $ updatePVP $ \st->st{enemyName=enemyID}
                                     case state of
                                      PVP pvpState ->do
-                                      if(pvpState.notInitialized)
+                                      if(pvpState.notInitialized && pvpState.hasOpponent==false)
                                       then
                                        do
+                                       H.modify_ $ updatePVP $ \st->st{enemyName=opponentName,opponentID=Just id, hasOpponent=true}
                                        log(pvpState.playerName <> "passed")
                                        let name =  pvpState.playerName
-                                       liftEffect $ WS.sendString pvpState.webSocket $ stringify $ encodeJson {name}
+                                       let playerID =  pvpState.myID
+                                       liftEffect $ WS.sendString pvpState.webSocket $ stringify $ encodeJson {playerID, name}
                                        H.modify_ $ updatePVP $ \st->st{notInitialized=false}
                                        _ <- H.subscribe' \sid->
                                         ES.affEventSource \emitter -> do
@@ -320,7 +335,6 @@ entryComponent =
                                         log(pvpState.playerName <> "did not pass")
                                      _->do
                                       pure unit
-        
     
     handleActionPVE = case _ of
         SendInput s ->
@@ -395,7 +409,7 @@ entryComponent =
                pure unit
         RunEntry -> pure unit
 
-    render (Entry initialEntrystate) =
+    render (Entry entrystate) =
      HH.div
         [style "width:50%; background-color:#2c2f33; display:grid; justify-content:center;allign-items:center;"]
         [HH.div
@@ -404,7 +418,7 @@ entryComponent =
         ],
         HH.div
         [style "width:100%; background-color:#2c2f33;"]
-        [HH.button [ HE.onClick \_ -> Just (ActionEntry (RunPVP $ fromJustString initialEntrystate.name)) ][ HH.text "Play PVP" ]
+        [HH.button [ HE.onClick \_ -> Just (ActionEntry (RunPVP $ fromJustString entrystate.name)) ][ HH.text "Play PVP" ]
             ],
         HH.div
         [style "width:100%; background-color:#2c2f33;"]
@@ -416,37 +430,37 @@ entryComponent =
         [style"color:yellow;font:40px Comic Sans;min-width:300px;text-align:center;"] 
             [ HH.text $ "Wizard name: " <> fromJustString initialEntrystate.name]]
         ]
-    render (PVP initialPVPstate) =
+    render (PVP myPVPstate) =
      HH.div
         [style "width:70%; background-color:#2c2f33;"]
         [HH.p
-        [style $ timerVisibility initialPVPstate.readyTimeoutTimer] 
-            [ HH.text $ "Battle Starts In: " <> show initialPVPstate.readyTimeoutTimer]
+        [style $ timerVisibility myPVPstate.readyTimeoutTimer] 
+            [ HH.text $ "Battle Starts In: " <> show myPVPstate.readyTimeoutTimer]
           ,HH.div
-        [style $ modalCSS initialPVPstate.showGameEndModal][
+        [style $ modalCSS myPVPstate.showGameEndModal][
             HH.p
-            [style $ battleOutcomeTitle initialPVPstate.combatOutcome] 
-            [ HH.text initialPVPstate.combatOutcome],
+            [style $ battleOutcomeTitle myPVPstate.combatOutcome] 
+            [ HH.text myPVPstate.combatOutcome],
             HH.div[style"position:relative;width:100%;height:200px;"][
             HH.p
             [style "width:300px;float:left;font-size:40px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;padding-left:20px;"] 
-            [ HH.text $ "WPM: " <> toStringWith (precision 3 ) (fromJustNumber initialPVPstate.wpm)]
+            [ HH.text $ "WPM: " <> toStringWith (precision 3 ) (fromJustNumber myPVPstate.wpm)]
             ,HH.p
             [style "width:300px;float:right;font-size:40px;color:red;text-shadow: 0px 0px 5px #555;margin:10px;padding-right:30px;"] 
-            [ HH.text $ "WPM: " <> toStringWith (precision 3 ) (fromJustNumber initialPVPstate.enemyWPM)]
+            [ HH.text $ "WPM: " <> toStringWith (precision 3 ) (fromJustNumber myPVPstate.enemyWPM)]
             ],
             HH.div[style"position:relative;width:100%;height:200px;"][
             HH.p
             [style "width:300px;float:left;font-size:40px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;padding-left:20px;"] 
-            [ HH.text $ "Correct Words: " <> show (initialPVPstate.wordCounter-initialPVPstate.wrongWordCounter)]
+            [ HH.text $ "Correct Words: " <> show (myPVPstate.wordCounter-myPVPstate.wrongWordCounter)]
             ,HH.p
             [style "width:300px;float:right;font-size:40px;color:red;text-shadow: 0px 0px 5px #555;margin:10px;padding-right:30px;"] 
-            [ HH.text $ "Correct Words: " <> show initialPVPstate.enemyCorrectWords]
+            [ HH.text $ "Correct Words: " <> show myPVPstate.enemyCorrectWords]
             ],
             HH.div[style"position:relative;width:100%;height:200px;"][
             HH.p
             [style "width:100%;font-size:30px;color:orange;text-shadow: 0px 0px 5px #555;margin:10px;"] 
-            [ HH.text $ generateFlavourText (wpmSetup initialPVPstate.wpm) (wpmSetup initialPVPstate.enemyWPM)]]
+            [ HH.text $ generateFlavourText (wpmSetup myPVPstate.wpm) (wpmSetup myPVPstate.enemyWPM)]]
         ]
           ,HH.div  
         [style"display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%"]
@@ -468,10 +482,10 @@ entryComponent =
         [style("position:absolute;display: inline-flex; flex-wrap:nowrap; width:60%;justify-content:space-between;justify-self:center;top:50%")]
         [HH.p
         [style"position:relative;font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:yellow;text-shadow: 0px 2px 3px #555;"] 
-            [HH.text $  (initialPVPstate.playerName)]
+            [HH.text $  (myPVPstate.playerName <> myPVPstate.myID)]
         ,HH.p
         [style"position:relative;font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:yellow;text-shadow: 0px 2px 3px #555;"] 
-            [HH.text $  (initialPVPstate.enemyName)]
+            [HH.text $  (myPVPstate.enemyName<> fromJustString(myPVPstate.opponentID))]
         ]
         ]
         ,
@@ -479,7 +493,7 @@ entryComponent =
         [style "width:100%; background-color:#2c2f33;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%"]
         [HH.p
         [style"font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:orange;text-shadow: 0px 2px 3px #555;min-width:100%"] 
-            [HH.text $  (fromJustString (myWords !! initialPVPstate.wordCounter))<>" "<> (fromJustString (myWords !! (initialPVPstate.wordCounter+1)))<>" "<> (fromJustString (myWords !! (initialPVPstate.wordCounter+2)))]
+            [HH.text $  (fromJustString (myWords !! myPVPstate.wordCounter))<>" "<> (fromJustString (myWords !! (myPVPstate.wordCounter+1)))<>" "<> (fromJustString (myWords !! (myPVPstate.wordCounter+2)))]
         ,HH.input
             [ HP.id_ "inp",
             HE.onValueChange \s -> Just (ActionPVP (SendInputpvp s)),
@@ -487,37 +501,37 @@ entryComponent =
             ]
         ,HH.p
         [style"color:yellow;font:40px Comic Sans;min-width:300px;text-align:center;"] 
-            [ HH.text $   show initialPVPstate.timer <>" seconds left"]
+            [ HH.text $   show myPVPstate.timer <>" seconds left"]
         ,HH.p
         [style"color:lightblue;font:24px Comic Sans;min-width:300px;"] 
-            [ HH.text $  " WPM: "<> show initialPVPstate.wpm]
+            [ HH.text $  " WPM: "<> show myPVPstate.wpm]
         ,HH.p
         [style"color:lightgreen;font:24px Comic Sans;min-width:300px;"] 
-            [ HH.text $  "  Correct words: " <> show (initialPVPstate.wordCounter-initialPVPstate.wrongWordCounter)<>" " <> " Wrong words: "<> show (initialPVPstate.wrongWordCounter)]
+            [ HH.text $  "  Correct words: " <> show (myPVPstate.wordCounter-myPVPstate.wrongWordCounter)<>" " <> " Wrong words: "<> show (myPVPstate.wrongWordCounter)]
         ]
         ]
-    render (PVE initialPVEstate)  =
+    render (PVE myPVEstate)  =
      HH.div
      [style "width:50%; background-color:#2c2f33;"]
      [HH.div
-        [style $ modalCSS initialPVEstate.showGameEndModal][
+        [style $ modalCSS myPVEstate.showGameEndModal][
             HH.p
-            [style $ pveOutcome initialPVEstate.combatOutcome] 
-            [ HH.text initialPVEstate.combatOutcome],
+            [style $ pveOutcome myPVEstate.combatOutcome] 
+            [ HH.text myPVEstate.combatOutcome],
             HH.div[style"position:relative;width:100%;height:150px;"][
             HH.p
             [style "width:300px;float:left;font-size:30px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;padding-left:20px;"] 
-            [ HH.text $ "WPM: " <> toStringWith (precision 3 ) (fromJustNumber initialPVEstate.wpm)]
+            [ HH.text $ "WPM: " <> toStringWith (precision 3 ) (fromJustNumber myPVEstate.wpm)]
             ],
             HH.div[style"position:relative;width:100%;height:150px;"][
             HH.p
             [style "width:300px;float:left;font-size:30px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;padding-left:20px;"] 
-            [ HH.text $ "Correct Words: " <> show (initialPVEstate.wordCounter-initialPVEstate.wrongWordCounter)]
+            [ HH.text $ "Correct Words: " <> show (myPVEstate.wordCounter-myPVEstate.wrongWordCounter)]
             ],
             HH.div[style"position:relative;width:100%;height:200px;"][
             HH.p
             [style "width:100%;font-size:20px;color:orange;text-shadow: 0px 0px 5px #555;margin:10px;"] 
-            [ HH.text $ "You typed " <> (toStringWith (precision 3) (fromJustNumber(initialPVEstate.wpm)/60.0)) <> " in a second!" ]
+            [ HH.text $ "You typed " <> (toStringWith (precision 3) (fromJustNumber(myPVEstate.wpm)/60.0)) <> " words in a second!" ]
             ]
             ]
         ,HH.div  
@@ -531,7 +545,7 @@ entryComponent =
         ,HP.height 150
         ,HP.width 200]]
         ,HH.div
-        [style("position:relative;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;left:"<>show initialPVEstate.zombiePosition<>"px;")]
+        [style("position:relative;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;left:"<>show myPVEstate.zombiePosition<>"px;")]
         [HH.img
         [HP.src  "images/zombie-pve.gif"
         ,HP.height 200
@@ -542,7 +556,7 @@ entryComponent =
         
         [HH.p
         [style"font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:orange;text-shadow: 0px 2px 3px #555;min-width:100%"] 
-            [HH.text $  (fromJustString (myWords !! initialPVEstate.wordCounter))<>" "<> (fromJustString (myWords !! (initialPVEstate.wordCounter+1)))<>" "<> (fromJustString (myWords !! (initialPVEstate.wordCounter+2)))]
+            [HH.text $  (fromJustString (myWords !! myPVEstate.wordCounter))<>" "<> (fromJustString (myWords !! (myPVEstate.wordCounter+1)))<>" "<> (fromJustString (myWords !! (myPVEstate.wordCounter+2)))]
         ,HH.input
             [ HP.id_ "inp",
             HE.onValueChange \s -> Just (ActionPVE (SendInput s)),
@@ -550,13 +564,13 @@ entryComponent =
             ]
         ,HH.p
         [style"color:yellow;font:40px Comic Sans;min-width:300px;text-align:center;"] 
-            [ HH.text $   show initialPVEstate.timer <>" seconds left"]
+            [ HH.text $   show myPVEstate.timer <>" seconds left"]
         ,HH.p
         [style"color:lightblue;font:24px Comic Sans;min-width:300px;"] 
-            [ HH.text $  " WPM: "<> show initialPVEstate.wpm]
+            [ HH.text $  " WPM: "<> show myPVEstate.wpm]
         ,HH.p
         [style"color:lightgreen;font:24px Comic Sans;min-width:300px;"] 
-            [ HH.text $  "  Correct words: " <> show (initialPVEstate.wordCounter-initialPVEstate.wrongWordCounter)<>" " <> " Wrong words: "<> show (initialPVEstate.wrongWordCounter)]
+            [ HH.text $  "  Correct words: " <> show (myPVEstate.wordCounter-myPVEstate.wrongWordCounter)<>" " <> " Wrong words: "<> show (myPVEstate.wrongWordCounter)]
         ]
   ]
 
@@ -605,6 +619,7 @@ decideWinner p1Words p2Words p1WPM p2WPM
     | p1WPM<p2WPM = "Defeat"
     | otherwise = "Draw"
     
+generateFlavourText :: Number -> Number -> String
 generateFlavourText wpm1 wpm2
  | wpm1 > wpm2 = "You were "<> toStringWith (precision 3) (((wpm1/wpm2)-1.0)*100.0) <> "% faster than your opponent!"
  | wpm1 < wpm2 = "You were "<> toStringWith (precision 3) (((wpm2/wpm1)-1.0)*100.0) <> "% slower than your opponent!"
@@ -675,6 +690,15 @@ myWords = split (Pattern " ") myParagraph
 myarrayedstring :: String
 myarrayedstring = joinWith "," myWords
 
+
+generateRandomNumber :: Effect Int
+generateRandomNumber = randomInt 100000 999999
+
+
+getStringID::String->String                 
+getStringID id = id
+
+
 repeatAction :: Emitter Aff Action -> Number -> Action -> Aff Unit
 repeatAction emitter t action = aux
   where
@@ -684,8 +708,8 @@ repeatAction emitter t action = aux
     aux
 
 -- message types:
-type EnemyState = { player2WPM :: Maybe Number, correctWords :: Int }
-type ID = { name :: String }
+type EnemyState = { playerID::String, player2WPM :: Maybe Number, correctWords :: Int }
+type ID = { playerID::String, name :: String }
 
 messageToAction :: String -> Either String ActionPVP
 messageToAction msg = do
@@ -693,11 +717,11 @@ messageToAction msg = do
   (parseSetPlayer json <|||> parseSetIt json) # describeErrs "Failed to decode JSON:\n"
   where
   parseSetPlayer json = do
-    ({player2WPM, correctWords} :: EnemyState) <- decodeJson json
+    ({playerID,player2WPM, correctWords} :: EnemyState) <- decodeJson json
     pure (UpdatePlayer2 player2WPM  correctWords)
   parseSetIt json = do
-    ({name} :: ID) <- decodeJson json
-    pure (SetPlayerConnected name)
+    ({playerID,name} :: ID) <- decodeJson json
+    pure (SetPlayerConnected playerID name )
 
   describeErr :: forall b.String -> Either JsonDecodeError b -> Either String b
   describeErr s = mapLeft (\ err -> s <> (printJsonDecodeError err))
