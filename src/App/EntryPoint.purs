@@ -9,11 +9,11 @@ import Control.Apply (lift2)
 import Control.Monad.State (class MonadState)
 import Data.Argonaut (JsonDecodeError, decodeJson, encodeJson, parseJson, printJsonDecodeError, stringify)
 import Data.Argonaut as Console
-import Data.Array ((!!))
+import Data.Array (index, (!!))
 import Data.DateTime (Time)
 import Data.Either (Either(..))
 import Data.Int (fromNumber, toNumber)
-import Data.Int.Parse (parseInt)
+import Data.Int.Parse (parseInt, toRadix)
 import Data.Maybe (Maybe(..))
 import Data.Number.Format (precision, toStringWith)
 import Data.String (Pattern(..), joinWith, split)
@@ -60,7 +60,8 @@ type PveState={
               zombiePosition::Number,
               particlesWidth::Number,
               showGameEndModal::Boolean,
-              combatOutcome::String}
+              combatOutcome::String,
+              textNo::Int}
 
 type EntryState={  
               name::Maybe String
@@ -87,7 +88,8 @@ type PvpState={
               combatOutcome::String,
               hasOpponent::Boolean,
               opponentID::Maybe String,
-              myID::String}
+              myID::String,
+              textNo::Int}
               
 
 updatePVE::(PveState->PveState)-> State->State
@@ -103,8 +105,8 @@ updateName fn (Entry state) = (Entry (fn state))
 updateName fn state = state
 
 
-initialPVEstate::PveState
-initialPVEstate = {wpm:Nothing,
+initialPVEstate::Int->PveState
+initialPVEstate textNum = {wpm:Nothing,
     timerIsRunning:false,
     timer:60, wordCounter: 0, 
     wrongWordCounter: 0,
@@ -114,7 +116,8 @@ initialPVEstate = {wpm:Nothing,
     zombiePosition: 350.0,
     particlesWidth:400.0,
     showGameEndModal:false,
-    combatOutcome:"Win"}
+    combatOutcome:"Win",
+    textNo:textNum}
 
 initialEntrystate::EntryState
 initialEntrystate = {name:Nothing}
@@ -140,7 +143,8 @@ initialPVPstate webSocket name id = {wrongWordCounter:0,
               combatOutcome:"Draw",
               hasOpponent:false,
               opponentID:Nothing,
-              myID:id}
+              myID:id,
+              textNo:0}
 
 
 data Action = ActionEntry ActionEntry | ActionPVE ActionPVE |ActionPVP ActionPVP 
@@ -164,7 +168,9 @@ entryComponent =
     handleActionPicker (ActionPVP actionPvp) = handleActionPVP actionPvp
     handleActionEntry = case _ of 
         RunPVE -> do 
-         H.put (PVE initialPVEstate)
+         random <- liftEffect $ randomInt 0 4
+         let textNumber = fromJustInt((parseInt (show random) (toRadix 10)))
+         H.put (PVE (initialPVEstate (textNumber)))
          pure unit   
          _<-liftEffect $ renderMagicJs unit
          pure unit  
@@ -202,7 +208,7 @@ entryComponent =
                 mynowtime <- liftEffect nowTime
                 let myNewWordCounter = pvpState.wordCounter + 1
                 let timeDifference = lift2 diff (Just mynowtime) pvpState.myFirstTime
-                let myText =fromJustString (myWords !!pvpState.wordCounter)
+                let myText =fromJustString ((myWords pvpState.textNo) !!pvpState.wordCounter)
                 let myNewWrongWordCounter=pvpState.wrongWordCounter+incrementor s myText
                 let myNewWPM = calcWPM (myNewWordCounter-myNewWrongWordCounter) timeDifference
                 let correctWords = myNewWordCounter-myNewWrongWordCounter
@@ -363,7 +369,7 @@ entryComponent =
                 mynowtime <- liftEffect nowTime
                 let myNewWordCounter = pveState.wordCounter + 1
                 let timeDifference = lift2 diff (Just mynowtime) pveState.myFirstTime
-                let myText =fromJustString (myWords !!pveState.wordCounter)
+                let myText =fromJustString ((myWords pveState.textNo) !!pveState.wordCounter)
                 let myNewWrongWordCounter=pveState.wrongWordCounter+incrementor s myText
                 let myNewWPM = calcWPM (myNewWordCounter-myNewWrongWordCounter) timeDifference
                 let myNewZombiePosition = pveState.zombiePosition+zombiePushValue s myText
@@ -496,7 +502,7 @@ entryComponent =
         [style "width:100%; background-color:#2c2f33;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%"]
         [HH.p
         [style"font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:orange;text-shadow: 0px 2px 3px #555;min-width:100%"] 
-            [HH.text $  (fromJustString (myWords !! myPVPstate.wordCounter))<>" "<> (fromJustString (myWords !! (myPVPstate.wordCounter+1)))<>" "<> (fromJustString (myWords !! (myPVPstate.wordCounter+2)))]
+            [HH.text $  (fromJustString ((myWords myPVPstate.textNo) !! myPVPstate.wordCounter))<>" "<> (fromJustString ((myWords myPVPstate.textNo) !! (myPVPstate.wordCounter+1)))<>" "<> (fromJustString ((myWords myPVPstate.textNo) !! (myPVPstate.wordCounter+2)))]
         ,HH.input
             [ HP.id_ "inp",
             HE.onValueChange \s -> Just (ActionPVP (SendInputpvp s)),
@@ -559,7 +565,7 @@ entryComponent =
         
         [HH.p
         [style"font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:orange;text-shadow: 0px 2px 3px #555;min-width:100%"] 
-            [HH.text $  (fromJustString (myWords !! myPVEstate.wordCounter))<>" "<> (fromJustString (myWords !! (myPVEstate.wordCounter+1)))<>" "<> (fromJustString (myWords !! (myPVEstate.wordCounter+2)))]
+            [HH.text $  (fromJustString ((myWords myPVEstate.textNo) !! myPVEstate.wordCounter))<>" "<> (fromJustString ((myWords myPVEstate.textNo) !! (myPVEstate.wordCounter+1)))<>" "<> (fromJustString ((myWords myPVEstate.textNo) !! (myPVEstate.wordCounter+2)))]
         ,HH.input
             [ HP.id_ "inp",
             HE.onValueChange \s -> Just (ActionPVE (SendInput s)),
@@ -640,6 +646,10 @@ fromJustNumber :: Maybe Number -> Number
 fromJustNumber Nothing = 1.0
 fromJustNumber (Just s) = s
 
+fromJustInt :: Maybe Int -> Int
+fromJustInt Nothing = 0
+fromJustInt (Just s) = s
+
 wpmSetup :: Maybe Number -> Number
 wpmSetup Nothing = 0.0
 wpmSetup (Just s) = s
@@ -684,15 +694,30 @@ magicPushCalculator input word
     | input == word = 10.0
     | otherwise = 0.0
 
-myParagraph :: String
-myParagraph = "The world of Dark Souls is a world of cycles. Kingdoms rise and fall, ages come and go, and even time can end and restart as the flame fades and is renewed. These cycles are linked to the First Flame, a mysterious manifestation of life that divides and defines separate states such as heat and cold, or life and death. As the First Flame fades, these differences also begin to fade, such as life and death having little distinction, and humans becoming Undead. The onset of an Age of Dark, the time when the First Flame has fully died, is marked by endless nights, rampant undeath, time, space, and reality breaking down, lands collapsing and converging on one another, people mutating into monsters, darkness covering the world, and the Gods losing their power. To avoid this and prolong the Age of Fire, the bearer of a powerful soul must 'link' themselves to the First Flame, becoming the fuel for another age. If this is not done, the First Flame will eventually die, and an Age of Dark will begin."
+text1 :: String
+text1 = "The world of Dark Souls is a world of cycles. Kingdoms rise and fall, ages come and go, and even time can end and restart as the flame fades and is renewed. These cycles are linked to the First Flame, a mysterious manifestation of life that divides and defines separate states such as heat and cold, or life and death. As the First Flame fades, these differences also begin to fade, such as life and death having little distinction, and humans becoming Undead. The onset of an Age of Dark, the time when the First Flame has fully died, is marked by endless nights, rampant undeath, time, space, and reality breaking down, lands collapsing and converging on one another, people mutating into monsters, darkness covering the world, and the Gods losing their power. To avoid this and prolong the Age of Fire, the bearer of a powerful soul must 'link' themselves to the First Flame, becoming the fuel for another age. If this is not done, the First Flame will eventually die, and an Age of Dark will begin."
 
-myWords :: Array String
-myWords = split (Pattern " ") myParagraph
+text2 :: String
+text2 = "Legendary city of the Witch of Izalith, one of the four original Lords. She and her daughters founded this city deep underground. The Witch and her daughters were originally practitioners of a form of fire sorcery, but this art was lost when the Flame of Chaos destroyed the city. When the First Flame began to fade, the Witch of Izalith tried to reproduce it using her magic and a special soul. However, she failed, and the result was the Flame of Chaos a twisted flame that produced distorted life instead, known as the demons. Gwyn and his knights waged a war against these demons and eventually defeated them, sealing the Bed of Chaos, their source of life, with magic. Some demons now appear in roles that suggest they may work for the gods, either willingly or as captured servants. The creation of the Flame of Chaos also created pyromancy as a byproduct, and Quelana, the only Daughter of Izalith to escape the destruction, was able to develop an entire system of magic to imitate the ancient fire spells. She took only one student, Salaman from the Great Swamp. In teaching Salaman, she hoped that mankind could learn to harness and control the flames, to prevent the same catastrophy that destroyed her own home. Salaman then returned to the Great Swamp to spread the art of pyromancy."
 
-myarrayedstring :: String
-myarrayedstring = joinWith "," myWords
+text3 :: String
+text3 = "Bearer of the strongest Lord Soul, Gwyn's power manifested as great spears of sunlight, which take the form of lightning. He founded the kingdom of Anor Londo, lead an army of his silver knights against the dragons, and was father to Gwynevere, Gwyndolin, and his disowned firstborn son thought to be Sen, the ancient God of War. Gwyn was the first to link the First Flame, becoming a Lord of Cinder, and now mindlessly guards it against outside threats and serves as a test of strength for those seeking to link it again. Gwyn's crown is said to have once had some special power, but its power has long since faded and now only exudes a slight warmth by the time the player acquires it. Gwyn and his clan are referred to as gods. Whether this is by Gwyn's own command or simply a title given to them by others for their strength is unknown, though they are still the primary religious figures in many human kingdoms. Gwyn is one of the four who happened upon the Lord Souls at the dawn of the Age Of Fire, along with Gravelord Nito, The Witch of Izalith and The Furtive Pygmy."
 
+text4 :: String
+text4 = "Youngest son of Gwyn, and the only god who stayed behind in Anor Londo. Gwyndolin has a deep adoration of the sun, and reveres his father, spending his time guarding Gwyn's tomb and orchestrating events alongside Kingseeker Frampt to delay the Age of Dark. Due to his strong connection to the moon and skill in its magic, he was raised as a daughter. Gwyndolin specializes in a form of sorcery that uses Faith instead of Intelligence, and he is capable of powerful illusions that are nearly indistinguishable from reality. In this way, he maintains the appearance of a thriving Anor Londo. In reality, the kingdom has long since been abandoned and experiences an endless night, and Gwyndolin and his Darkmoon Knights are the only ones who remain. Undead may join his company of knights if they wish, though any who dispell the illusion of Gwynevere or enter Gwyn's tomb are instead marked as irredeemable sinners and pursued by those same knights."
+
+text5 :: String
+text5 = "One of the four original Lord Soul bearers, her Lord Soul granted the power of fire. She is a witch and master of the now forgotten fire sorceries, and founded the city of Izalith with her daughters deep underground. When the First Flame began to fade, she attempted to create a second First Flame to replace it using her witchcraft and a special soul, but failed catastrophically and instead created the Flame of Chaos. The birth of Chaos marked the birth of demons, and its flame transformed the Witch of Izalith and all her daughters into demons barring Quelana, who escaped the destruction of her home. As the daughters of Izalith were the only practitioners of fire sorcery, it is now a forgotten art, but the creation of Chaos also created pyromancy as a byproduct. Gwyn waged war against the demons and eventually routed them, shackling the Bed of Chaos, their source of life, to contain them."
+
+
+
+myWords :: Int->Array String
+myWords int  = split (Pattern " ") (pickLore int)
+
+lore :: Array String
+lore = [text1,text2,text3,text4,text5]
+
+pickLore position = fromJustString(index lore position)
 
 generateRandomNumber :: Effect Int
 generateRandomNumber = randomInt 100000 999999
