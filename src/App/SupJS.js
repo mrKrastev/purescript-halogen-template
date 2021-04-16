@@ -7,8 +7,13 @@ exports.disableInputBox = () => {
         document.getElementById("inp").disabled=true;
            return 1;
        };
+exports.startGame = () => {
+        document.getElementById("inp").disabled=false;
+        document.getElementById("initialTimer").style.visibility=false;
+           return 1;
+       };
 
- exports.changeParticleSpeed = (speed,speed2) => {
+ exports.changeParticleSpeed = (speed) => {
      if(speed==null){
         document.getElementById("speedInput").value=3;
      }else{
@@ -20,21 +25,37 @@ exports.disableInputBox = () => {
         }
     document.getElementById("speedInput").value=3+Math.asin(speed*0.01)*(speed/2);
      }
-     if(speed2==null){
+    };
+exports.changeParticleSpeedandWidth = (speed,widthAmount) => {
+    if(speed==null){
         document.getElementById("speedInputp2").value=3;
      }else{
-        if(speed2>99){
-            speed2=99;
+        if(speed>99){
+            speed=99;
             }
-        if(speed2<3){
-            speed2=3;
-            }
-        document.getElementById("speedInputp2").value=3+Math.asin(speed2*0.01)*(speed2/2);
-    }
-           return 1;
-       };
+        if(speed<3){
+             speed=3;
+        }
+    document.getElementById("speedInputp2").value=3+Math.asin(speed*0.01)*(speed/2);
+     } 
+    document.getElementById("magicWidthField").value=widthAmount+50;
+    return 1;
+ };
+exports.changeParticleSpeed2 = (speed) => {
+        if(speed==null){
+           document.getElementById("speedInputp2").value=3;
+        }else{
+           if(speed>99){
+               speed=99;
+               }
+           if(speed<3){
+                speed=3;
+           }
+       document.getElementById("speedInputp2").value=3+Math.asin(speed*0.01)*(speed/2);
+        } 
+    };   
 exports.resizeMagic = (widthAmount) => {
-        document.getElementById("magicWidthField").value=widthAmount+50;
+        document.getElementById("magicWidthField").value=widthAmount;
            return 1;
        };
 
@@ -58,6 +79,7 @@ exports.fixPVPmagicPositioning = () => {
         return 1;
        };
 exports.fixPVPmagic = () => {
+    document.getElementById("inp").disabled=true;
     document.getElementById("particles-jsp2").style.visibility="visible";
     document.getElementById("particles-js").style.visibility="visible";
     document.getElementById("particles-js").style.position="relative";
@@ -72,6 +94,7 @@ exports.fixPVPmagic = () => {
             document.getElementById("magicfield").style.left="27%";
             document.getElementById("magicfield").style.height="200px";
             document.getElementById("magicfield").style.width="48%";
+
 
             return 1;
            };
