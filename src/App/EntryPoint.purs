@@ -148,7 +148,7 @@ data Action = ActionEntry ActionEntry | ActionPVE ActionPVE |ActionPVP ActionPVP
 
 data ActionEntry = RunPVE | RunPVP String  | SetName String
 data ActionPVE =  RunEntry | Update | SendInput String | Decrement SubscriptionId
-data ActionPVP=  RunEntrypvp | Updatepvp SubscriptionId | SendInputpvp String |DecrementInitialTimer SubscriptionId | Decrementpvp SubscriptionId | ReceiveMessage String | UpdatePlayer2 (Maybe Number) Int | SetPlayerConnected String String 
+data ActionPVP=  RunEntrypvp | Updatepvp SubscriptionId | SendInputpvp String |DecrementInitialTimer SubscriptionId | Decrementpvp SubscriptionId | ReceiveMessage String | UpdatePlayer2 (Maybe Number) Int String | SetPlayerConnected String String 
 
 --entryComponent :: forall t177 t178 t198 t201. Component HTML t201 t198 t178 t177
 entryComponent :: forall t400 t401 t423 t426. MonadEffect t400 => MonadAff t400 => Component HTML t426 t423 t401 t400
@@ -232,7 +232,8 @@ entryComponent =
              PVP pvpState -> do
               let player2WPM = pvpState.wpm
               let correctWords = (pvpState.wordCounter - pvpState.wrongWordCounter)
-              liftEffect $ WS.sendString pvpState.webSocket $ stringify $ encodeJson {player2WPM,correctWords}
+              let playerID=pvpState.myID
+              liftEffect $ WS.sendString pvpState.webSocket $ stringify $ encodeJson {playerID,player2WPM,correctWords}
               let newMagic=(resizeMagic (pvpState.particlesWidth))
               pure unit
              _ -> pure unit
@@ -294,12 +295,14 @@ entryComponent =
         case messageToAction msg of
             Left err -> liftEffect $ log err
             Right action -> handleActionPVP action
-       UpdatePlayer2 wpm numberOfCorrectWords -> do 
+       UpdatePlayer2 wpm numberOfCorrectWords dataID -> do 
                                                   log("updatePlayer")
                                                   
                                                   state <- H.get
                                                   case state of
-                                                      PVP pvpState -> do
+                                                     PVP pvpState -> do
+                                                      if dataID==(fromJustString pvpState.opponentID) then do
+                                                    
                                                        let previousEnemyCorrectWords=pvpState.enemyCorrectWords
                                                        log(show previousEnemyCorrectWords <> "second val :"<> show numberOfCorrectWords)
                                                        let updatedParticlesWidth = pvpState.particlesWidth + (calculateMagicPush previousEnemyCorrectWords numberOfCorrectWords)
@@ -309,8 +312,8 @@ entryComponent =
                                                        --void $ liftEffect $ changeParticleSpeedandWidth (fromJustNumber pvpState.enemyWPM) (pvpState.particlesWidth)
                                                        -- $ liftEffect $ (resizeMagic (pvpState.particlesWidth))  
                                                        void $ liftEffect $ changeParticleSpeed2 (fromJustNumber pvpState.enemyWPM)
-                                                       
-                                                      _->do
+                                                      else pure unit
+                                                     _->do
                                                        pure unit
                                                   pure unit
        SetPlayerConnected id opponentName  -> do
@@ -718,7 +721,7 @@ messageToAction msg = do
   where
   parseSetPlayer json = do
     ({playerID,player2WPM, correctWords} :: EnemyState) <- decodeJson json
-    pure (UpdatePlayer2 player2WPM  correctWords)
+    pure (UpdatePlayer2 player2WPM  correctWords playerID)
   parseSetIt json = do
     ({playerID,name} :: ID) <- decodeJson json
     pure (SetPlayerConnected playerID name )
