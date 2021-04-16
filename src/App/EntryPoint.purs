@@ -122,8 +122,8 @@ initialPVEstate textNum = {wpm:Nothing,
 initialEntrystate::EntryState
 initialEntrystate = {name:Nothing}
 
-initialPVPstate::WebSocket->String->String->PvpState
-initialPVPstate webSocket name id = {wrongWordCounter:0,
+initialPVPstate::WebSocket->String->String->Int->PvpState
+initialPVPstate webSocket name id textNumber = {wrongWordCounter:0,
               wordCounter:0,
               myTimeNow:Nothing,
               myFirstTime:Nothing,
@@ -138,13 +138,13 @@ initialPVPstate webSocket name id = {wrongWordCounter:0,
               enemyName:"Connecting...",
               enemyCorrectWords:0,
               notInitialized:true,
-              readyTimeoutTimer:2,
+              readyTimeoutTimer:30,
               showGameEndModal:false,
               combatOutcome:"Draw",
               hasOpponent:false,
               opponentID:Nothing,
               myID:id,
-              textNo:0}
+              textNo:textNumber}
 
 
 data Action = ActionEntry ActionEntry | ActionPVE ActionPVE |ActionPVP ActionPVP 
@@ -152,7 +152,7 @@ data Action = ActionEntry ActionEntry | ActionPVE ActionPVE |ActionPVP ActionPVP
 
 data ActionEntry = RunPVE | RunPVP String  | SetName String
 data ActionPVE =  RunEntry | Update | SendInput String | Decrement SubscriptionId
-data ActionPVP=  RunEntrypvp | Updatepvp SubscriptionId | SendInputpvp String |DecrementInitialTimer SubscriptionId | Decrementpvp SubscriptionId | ReceiveMessage String | UpdatePlayer2 (Maybe Number) Int String | SetPlayerConnected String String 
+data ActionPVP=  RunEntrypvp | Updatepvp SubscriptionId | SendInputpvp String |DecrementInitialTimer SubscriptionId | Decrementpvp SubscriptionId | ReceiveMessage String | UpdatePlayer2 (Maybe Number) Int String | SetPlayerConnected String String Int 
 
 --entryComponent :: forall t177 t178 t198 t201. Component HTML t201 t198 t178 t177
 entryComponent :: forall t400 t401 t423 t426. MonadEffect t400 => MonadAff t400 => Component HTML t426 t423 t401 t400
@@ -184,9 +184,11 @@ entryComponent =
              pure $ ES.Finalizer do
                 Aff.killFiber (error "Event source finalized") fiber
             myid <- liftEffect $ generateRandomNumber
-            H.put (PVP (initialPVPstate ws name (show myid)))
+            random <- liftEffect $ randomInt 0 4
+            let textNumber = fromJustInt((parseInt (show random) (toRadix 10)))
+            H.put (PVP (initialPVPstate ws name (show myid) textNumber))
             let playerID = show myid
-            liftEffect $ WS.sendString ws $ stringify $ encodeJson {playerID,name}
+            liftEffect $ WS.sendString ws $ stringify $ encodeJson {playerID,name,textNumber}
             void $ liftEffect $ fixPVPmagic unit
             pure unit
         SetName s -> H.modify_ $ updateName $ \st->st{name=Just(s)}
@@ -322,7 +324,7 @@ entryComponent =
                                                      _->do
                                                        pure unit
                                                   pure unit
-       SetPlayerConnected id opponentName  -> do
+       SetPlayerConnected id opponentName textId  -> do
                                     state <- H.get
                                     case state of
                                      PVP pvpState ->do
@@ -330,18 +332,20 @@ entryComponent =
                                       then
                                        do
                                        H.modify_ $ updatePVP $ \st->st{enemyName=opponentName,opponentID=Just id, hasOpponent=true}
-                                       log(pvpState.playerName <> "passed")
+                                       if(Just textId == Just pvpState.textNo) then do
+                                         pure unit
+                                       else H.modify_ $ updatePVP $ \st->st{textNo=textId}
                                        let name =  pvpState.playerName
                                        let playerID =  pvpState.myID
-                                       liftEffect $ WS.sendString pvpState.webSocket $ stringify $ encodeJson {playerID, name}
+                                       let textNumber =  textId
+                                       liftEffect $ WS.sendString pvpState.webSocket $ stringify $ encodeJson {playerID, name,textNumber}
                                        H.modify_ $ updatePVP $ \st->st{notInitialized=false}
                                        _ <- H.subscribe' \sid->
                                         ES.affEventSource \emitter -> do
                                         _ <- Aff.forkAff $ repeatAction emitter 1000.0 (ActionPVP (DecrementInitialTimer sid)) 
                                         pure mempty
                                        pure unit
-                                       else
-                                        log(pvpState.playerName <> "did not pass")
+                                       else pure unit
                                      _->do
                                       pure unit
     
@@ -717,6 +721,7 @@ myWords int  = split (Pattern " ") (pickLore int)
 lore :: Array String
 lore = [text1,text2,text3,text4,text5]
 
+pickLore :: Int -> String
 pickLore position = fromJustString(index lore position)
 
 generateRandomNumber :: Effect Int
@@ -737,7 +742,7 @@ repeatAction emitter t action = aux
 
 -- message types:
 type EnemyState = { playerID::String, player2WPM :: Maybe Number, correctWords :: Int }
-type ID = { playerID::String, name :: String }
+type ID = { playerID::String, name :: String, textNumber::Int }
 
 messageToAction :: String -> Either String ActionPVP
 messageToAction msg = do
@@ -748,8 +753,8 @@ messageToAction msg = do
     ({playerID,player2WPM, correctWords} :: EnemyState) <- decodeJson json
     pure (UpdatePlayer2 player2WPM  correctWords playerID)
   parseSetIt json = do
-    ({playerID,name} :: ID) <- decodeJson json
-    pure (SetPlayerConnected playerID name )
+    ({playerID,name,textNumber} :: ID) <- decodeJson json
+    pure (SetPlayerConnected playerID name textNumber )
 
   describeErr :: forall b.String -> Either JsonDecodeError b -> Either String b
   describeErr s = mapLeft (\ err -> s <> (printJsonDecodeError err))
