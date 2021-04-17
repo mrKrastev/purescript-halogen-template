@@ -40,7 +40,6 @@ import Halogen.HTML.Properties (style)
 import Halogen.HTML.Properties as HP
 import Halogen.Query.EventSource (Emitter)
 import Halogen.Query.EventSource as ES
-import Run (runPure)
 import SupJS (startGame, changeParticleSpeed, changeParticleSpeedandWidth, cleanInputBox, disableInputBox, fixPVPmagic, fixPVPmagicPositioning, renderMagicJs, renderMagicJsPVP, resizeMagic, changeParticleSpeed2)
 import WSListener (setupWSListener)
 import Web.Socket.WebSocket (WebSocket)
@@ -154,7 +153,6 @@ data ActionEntry = RunPVE | RunPVP String  | SetName String
 data ActionPVE =  RunEntry | Update | SendInput String | Decrement SubscriptionId
 data ActionPVP=  RunEntrypvp | Updatepvp SubscriptionId | SendInputpvp String |DecrementInitialTimer SubscriptionId | Decrementpvp SubscriptionId | ReceiveMessage String | UpdatePlayer2 (Maybe Number) Int String | SetPlayerConnected String String Int 
 
---entryComponent :: forall t177 t178 t198 t201. Component HTML t201 t198 t178 t177
 entryComponent :: forall t400 t401 t423 t426. MonadEffect t400 => MonadAff t400 => Component HTML t426 t423 t401 t400
 entryComponent =
   H.mkComponent
@@ -200,7 +198,6 @@ entryComponent =
             state<-H.get
             case state of
               PVP pvpState ->do
-                log(show pvpState.timerIsRunning)
                 if pvpState.timerIsRunning==false
                 then
                 pure unit
@@ -215,7 +212,6 @@ entryComponent =
                 let myNewWPM = calcWPM (myNewWordCounter-myNewWrongWordCounter) timeDifference
                 let correctWords = myNewWordCounter-myNewWrongWordCounter
                 let particlesWidthUpdate = pvpState.particlesWidth+magicPushCalculator s myText
-                --let particlesWidthUpdate = calculateMagicPush  (correctWords) (pvpState.enemyCorrectWords) (pvpState.particlesWidth)
                 let newMagic=(resizeMagic (pvpState.particlesWidth))
                 pure unit
                 H.modify_ $ updatePVP \st -> st{
@@ -225,10 +221,7 @@ entryComponent =
                                     wpm = myNewWPM,
                                     wrongWordCounter=myNewWrongWordCounter,
                                     particlesWidth=particlesWidthUpdate}
-                let player2WPM = myNewWPM
-                --let correctWords = myNewWordCounter-myNewWrongWordCounter
-                --liftEffect $ WS.sendString pvpState.webSocket $ stringify $ encodeJson {player2WPM,correctWords}
-                                      
+                let player2WPM = myNewWPM    
                 _<-liftEffect $ cleanInputBox unit
                 pure unit
               _ -> do
@@ -310,15 +303,10 @@ entryComponent =
                                                   case state of
                                                      PVP pvpState -> do
                                                       if dataID==(fromJustString pvpState.opponentID) then do
-                                                    
                                                        let previousEnemyCorrectWords=pvpState.enemyCorrectWords
-                                                       log(show previousEnemyCorrectWords <> "second val :"<> show numberOfCorrectWords)
                                                        let updatedParticlesWidth = pvpState.particlesWidth + (calculateMagicPush previousEnemyCorrectWords numberOfCorrectWords)
                                                        log(show updatedParticlesWidth)
                                                        H.modify_ $ updatePVP $ \st->st{particlesWidth=updatedParticlesWidth,enemyWPM=wpm,enemyCorrectWords=numberOfCorrectWords}
-                                                       log(show pvpState.enemyWPM)
-                                                       --void $ liftEffect $ changeParticleSpeedandWidth (fromJustNumber pvpState.enemyWPM) (pvpState.particlesWidth)
-                                                       -- $ liftEffect $ (resizeMagic (pvpState.particlesWidth))  
                                                        void $ liftEffect $ changeParticleSpeed2 (fromJustNumber pvpState.enemyWPM)
                                                       else pure unit
                                                      _->do
@@ -424,24 +412,34 @@ entryComponent =
 
     render (Entry entrystate) =
      HH.div
-        [style "width:50%; background-color:#2c2f33; display:grid; justify-content:center;allign-items:center;"]
+        [style "width:80%; background-color:#2c2f33; display:flex;flex-wrap:wrap; justify-content:center;allign-items:center;"]
         [HH.div
-        [style "width:100%; background-color:transparent;"]
-        [HH.button [ HE.onClick \_ -> Just (ActionEntry RunPVE) ][ HH.text "Play PVE" ]
+        [style flexDivCenterItems]
+        [HH.button  
+        [style (buttonsCss "1392A4" "0AD4F0"), HE.onClick \_ -> Just (ActionEntry RunPVE) ]
+        [ HH.text "Play PVE" ] 
         ],
         HH.div
-        [style "width:100%; background-color:#2c2f33;"]
-        [HH.button [ HE.onClick \_ -> Just (ActionEntry (RunPVP $ fromJustString entrystate.name)) ][ HH.text "Play PVP" ]
+        [style flexDivCenterItems]
+        [HH.button 
+        [ style (buttonsCss "BC6513" "E48D3A"), HE.onClick \_ -> Just (ActionEntry (RunPVP $ fromJustString entrystate.name)) ]
+        [ HH.text "Play PVP" ]
             ],
         HH.div
-        [style "width:100%; background-color:#2c2f33;"]
-        [HH.input [ HE.onValueInput \s -> Just(ActionEntry(SetName s)) ]
+        [style flexDivCenterItems]
+        [HH.input [HP.placeholder "What is your name?" ,style inputBoxCSS, HE.onValueInput \s -> Just(ActionEntry(SetName s)) ]
             ],
         HH.div
-        [style "width:100%; background-color:#2c2f33;"]
+        [style flexDivCenterItems]
         [HH.p
         [style"color:yellow;font:40px Comic Sans;min-width:300px;text-align:center;"] 
-            [ HH.text $ "Wizard name: " <> fromJustString initialEntrystate.name]]
+            [ HH.text $ "Wizard name: " <> fromJustString entrystate.name]]
+        ,HH.div
+        [style flexDivCenterItems]
+        [HH.img
+        [HP.src  "images/grimoire.png"
+        ,HP.height 400
+        ,HP.width 600]]
         ]
     render (PVP myPVPstate) =
      HH.div
@@ -478,9 +476,9 @@ entryComponent =
           ,HH.div  
         [style"display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%"]
         [HH.div  
-        [style"display:inline-flex;width:100%;justify-self:center;margin-top:10%;background-color:transparent;"]
+        [style"display:inline-flex;width:100%;justify-self:center;margin-top:10%;margin-bottom:15%;background-color:transparent;"]
         [HH.div
-        [style("position:relative;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;left:0px;top:50px")]
+        [style("position:absolute;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;left:15%;top:32%")]
         [HH.img
         [HP.src  "images/mage.gif"
         ,HP.height 150
@@ -495,10 +493,10 @@ entryComponent =
         [style("position:absolute;display: inline-flex; flex-wrap:nowrap; width:60%;justify-content:space-between;justify-self:center;top:50%")]
         [HH.p
         [style"position:relative;font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:yellow;text-shadow: 0px 2px 3px #555;"] 
-            [HH.text $  (myPVPstate.playerName <> myPVPstate.myID)]
+            [HH.text $  (myPVPstate.playerName)]
         ,HH.p
         [style"position:relative;font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:yellow;text-shadow: 0px 2px 3px #555;"] 
-            [HH.text $  (myPVPstate.enemyName<> fromJustString(myPVPstate.opponentID))]
+            [HH.text $  (myPVPstate.enemyName)]
         ]
         ]
         ,
@@ -531,19 +529,19 @@ entryComponent =
             HH.p
             [style $ pveOutcome myPVEstate.combatOutcome] 
             [ HH.text myPVEstate.combatOutcome],
-            HH.div[style"position:relative;width:100%;height:150px;"][
+            HH.div[style"position:relative;width:100%;height:100px;"][
             HH.p
-            [style "width:300px;float:left;font-size:30px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;padding-left:20px;"] 
+            [style "width:100%;font-size:30px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;text-align:center;"] 
             [ HH.text $ "WPM: " <> toStringWith (precision 3 ) (fromJustNumber myPVEstate.wpm)]
             ],
-            HH.div[style"position:relative;width:100%;height:150px;"][
+            HH.div[style"position:relative;width:100%;height:100px;"][
             HH.p
-            [style "width:300px;float:left;font-size:30px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;padding-left:20px;"] 
+            [style "width:100%;font-size:30px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;text-align:center;"] 
             [ HH.text $ "Correct Words: " <> show (myPVEstate.wordCounter-myPVEstate.wrongWordCounter)]
             ],
-            HH.div[style"position:relative;width:100%;height:200px;"][
+            HH.div[style"position:relative;width:100%;height:100px;"][
             HH.p
-            [style "width:100%;font-size:20px;color:orange;text-shadow: 0px 0px 5px #555;margin:10px;"] 
+            [style "width:100%;font-size:20px;color:orange;text-shadow: 0px 0px 5px #555;margin:10px;text-align:center;"] 
             [ HH.text $ "You typed " <> (toStringWith (precision 3) (fromJustNumber(myPVEstate.wpm)/60.0)) <> " words in a second!" ]
             ]
             ]
@@ -605,8 +603,8 @@ fixPVPmagicRender = do
 
 modalCSS :: Boolean -> String
 modalCSS flag
- | flag == true = "width:50%; height:wrap-content;left:25%;top:15%;z-index:999; position:absolute;background-color:#23272a;display:block;justify-content:space-between;overflow:wrap;"
- | otherwise = "width:50%; height:wrap-content;left:25%;top:15%;z-index:999; position:absolute;background-color:#23272a;display:none;"
+ | flag == true = "width:50%; height:wrap-content;left:25%;top:15%;z-index:999; position:absolute;background-color:#23272a;display:block;justify-content:space-between;overflow:wrap;border-width:5px;border-style:groove;border-color:orange;"
+ | otherwise = "width:50%; height:wrap-content;left:25%;top:15%;z-index:999; position:absolute;background-color:#23272a;display:none;border-width:5px;border-style:groove;border-color:orange;"
 
 battleOutcomeTitle :: String -> String
 battleOutcomeTitle outcome 
@@ -619,8 +617,26 @@ pveOutcome outcome
  | outcome == "Win" = "width:100%;margin: 50px auto;text-align: center;text-shadow: -1px -1px 0px rgba(255,255,255,0.3), 1px 1px 0px rgba(0,0,0,0.8);color:rgba(30, 130, 76, 1);opacity: 1;font: 700 80px 'Bitter'"
  | otherwise = "width:100%;margin: 50px auto;text-align: center;text-shadow: -1px -1px 0px rgba(255,255,255,0.3), 1px 1px 0px rgba(0,0,0,0.8);color:rgba(150, 40, 27, 1);opacity: 1;font: 700 80px 'Bitter'"
 
+buttonsCss :: String->String-> String
+buttonsCss color1 color2 = "width:200px;height:70px;"<>
+    "background: linear-gradient(to left top, #"<>color1<>" 50%, #"<>color2<>" 50%);"<>
+    "border-style: none;"<>
+    "color:#fff;"<>
+    "font-size: 23px;"<>
+    "letter-spacing: 3px;"<>
+    "font-family: 'Lato';"<>
+    "font-weight: 600;"<>
+    "outline: none;"<>
+    "position: relative;"<>
+    "margin: 10px;"<>
+    "overflow: hidden;"<>
+    "box-shadow: 0px 1px 2px rgba(0,0,0,.2);"
 
+flexDivCenterItems :: String
+flexDivCenterItems="width:100%; display:flex; flex-wrap:wrap;justify-content:center; background-color:transparent;"
 
+inputBoxCSS :: String
+inputBoxCSS="border: none;border-bottom: 2px solid orange;background:transparent; width:60%;height:60px;font-size:50px;color:white;text-align:center;margin:10px;"
 -- pure functions --------------------------------------------------------------------------------------------------------------------
 
 
@@ -724,7 +740,6 @@ generateRandomNumber = randomInt 100000 999999
 
 getStringID::String->String                 
 getStringID id = id
-
 
 repeatAction :: Emitter Aff Action -> Number -> Action -> Aff Unit
 repeatAction emitter t action = aux
