@@ -9,11 +9,11 @@ import Control.Apply (lift2)
 import Control.Monad.State (class MonadState)
 import Data.Argonaut (JsonDecodeError, decodeJson, encodeJson, parseJson, printJsonDecodeError, stringify)
 import Data.Argonaut as Console
-import Data.Array ((!!))
+import Data.Array (index, (!!))
 import Data.DateTime (Time)
 import Data.Either (Either(..))
 import Data.Int (fromNumber, toNumber)
-import Data.Int.Parse (parseInt)
+import Data.Int.Parse (parseInt, toRadix)
 import Data.Maybe (Maybe(..))
 import Data.Number.Format (precision, toStringWith)
 import Data.String (Pattern(..), joinWith, split)
@@ -40,7 +40,6 @@ import Halogen.HTML.Properties (style)
 import Halogen.HTML.Properties as HP
 import Halogen.Query.EventSource (Emitter)
 import Halogen.Query.EventSource as ES
-import Run (runPure)
 import SupJS (startGame, changeParticleSpeed, changeParticleSpeedandWidth, cleanInputBox, disableInputBox, fixPVPmagic, fixPVPmagicPositioning, renderMagicJs, renderMagicJsPVP, resizeMagic, changeParticleSpeed2)
 import WSListener (setupWSListener)
 import Web.Socket.WebSocket (WebSocket)
@@ -60,7 +59,8 @@ type PveState={
               zombiePosition::Number,
               particlesWidth::Number,
               showGameEndModal::Boolean,
-              combatOutcome::String}
+              combatOutcome::String,
+              textNo::Int}
 
 type EntryState={  
               name::Maybe String
@@ -87,7 +87,8 @@ type PvpState={
               combatOutcome::String,
               hasOpponent::Boolean,
               opponentID::Maybe String,
-              myID::String}
+              myID::String,
+              textNo::Int}
               
 
 updatePVE::(PveState->PveState)-> State->State
@@ -103,8 +104,8 @@ updateName fn (Entry state) = (Entry (fn state))
 updateName fn state = state
 
 
-initialPVEstate::PveState
-initialPVEstate = {wpm:Nothing,
+initialPVEstate::Int->PveState
+initialPVEstate textNum = {wpm:Nothing,
     timerIsRunning:false,
     timer:60, wordCounter: 0, 
     wrongWordCounter: 0,
@@ -114,13 +115,14 @@ initialPVEstate = {wpm:Nothing,
     zombiePosition: 350.0,
     particlesWidth:400.0,
     showGameEndModal:false,
-    combatOutcome:"Win"}
+    combatOutcome:"Win",
+    textNo:textNum}
 
 initialEntrystate::EntryState
 initialEntrystate = {name:Nothing}
 
-initialPVPstate::WebSocket->String->String->PvpState
-initialPVPstate webSocket name id = {wrongWordCounter:0,
+initialPVPstate::WebSocket->String->String->Int->PvpState
+initialPVPstate webSocket name id textNumber = {wrongWordCounter:0,
               wordCounter:0,
               myTimeNow:Nothing,
               myFirstTime:Nothing,
@@ -135,12 +137,13 @@ initialPVPstate webSocket name id = {wrongWordCounter:0,
               enemyName:"Connecting...",
               enemyCorrectWords:0,
               notInitialized:true,
-              readyTimeoutTimer:2,
+              readyTimeoutTimer:30,
               showGameEndModal:false,
               combatOutcome:"Draw",
               hasOpponent:false,
               opponentID:Nothing,
-              myID:id}
+              myID:id,
+              textNo:textNumber}
 
 
 data Action = ActionEntry ActionEntry | ActionPVE ActionPVE |ActionPVP ActionPVP 
@@ -148,9 +151,8 @@ data Action = ActionEntry ActionEntry | ActionPVE ActionPVE |ActionPVP ActionPVP
 
 data ActionEntry = RunPVE | RunPVP String  | SetName String
 data ActionPVE =  RunEntry | Update | SendInput String | Decrement SubscriptionId
-data ActionPVP=  RunEntrypvp | Updatepvp SubscriptionId | SendInputpvp String |DecrementInitialTimer SubscriptionId | Decrementpvp SubscriptionId | ReceiveMessage String | UpdatePlayer2 (Maybe Number) Int String | SetPlayerConnected String String 
+data ActionPVP=  RunEntrypvp | Updatepvp SubscriptionId | SendInputpvp String |DecrementInitialTimer SubscriptionId | Decrementpvp SubscriptionId | ReceiveMessage String | UpdatePlayer2 (Maybe Number) Int String | SetPlayerConnected String String Int 
 
---entryComponent :: forall t177 t178 t198 t201. Component HTML t201 t198 t178 t177
 entryComponent :: forall t400 t401 t423 t426. MonadEffect t400 => MonadAff t400 => Component HTML t426 t423 t401 t400
 entryComponent =
   H.mkComponent
@@ -164,7 +166,9 @@ entryComponent =
     handleActionPicker (ActionPVP actionPvp) = handleActionPVP actionPvp
     handleActionEntry = case _ of 
         RunPVE -> do 
-         H.put (PVE initialPVEstate)
+         random <- liftEffect $ randomInt 0 4
+         let textNumber = fromJustInt((parseInt (show random) (toRadix 10)))
+         H.put (PVE (initialPVEstate (textNumber)))
          pure unit   
          _<-liftEffect $ renderMagicJs unit
          pure unit  
@@ -178,9 +182,11 @@ entryComponent =
              pure $ ES.Finalizer do
                 Aff.killFiber (error "Event source finalized") fiber
             myid <- liftEffect $ generateRandomNumber
-            H.put (PVP (initialPVPstate ws name (show myid)))
+            random <- liftEffect $ randomInt 0 4
+            let textNumber = fromJustInt((parseInt (show random) (toRadix 10)))
+            H.put (PVP (initialPVPstate ws name (show myid) textNumber))
             let playerID = show myid
-            liftEffect $ WS.sendString ws $ stringify $ encodeJson {playerID,name}
+            liftEffect $ WS.sendString ws $ stringify $ encodeJson {playerID,name,textNumber}
             void $ liftEffect $ fixPVPmagic unit
             pure unit
         SetName s -> H.modify_ $ updateName $ \st->st{name=Just(s)}
@@ -192,7 +198,6 @@ entryComponent =
             state<-H.get
             case state of
               PVP pvpState ->do
-                log(show pvpState.timerIsRunning)
                 if pvpState.timerIsRunning==false
                 then
                 pure unit
@@ -202,12 +207,11 @@ entryComponent =
                 mynowtime <- liftEffect nowTime
                 let myNewWordCounter = pvpState.wordCounter + 1
                 let timeDifference = lift2 diff (Just mynowtime) pvpState.myFirstTime
-                let myText =fromJustString (myWords !!pvpState.wordCounter)
+                let myText =fromJustString ((myWords pvpState.textNo) !!pvpState.wordCounter)
                 let myNewWrongWordCounter=pvpState.wrongWordCounter+incrementor s myText
                 let myNewWPM = calcWPM (myNewWordCounter-myNewWrongWordCounter) timeDifference
                 let correctWords = myNewWordCounter-myNewWrongWordCounter
                 let particlesWidthUpdate = pvpState.particlesWidth+magicPushCalculator s myText
-                --let particlesWidthUpdate = calculateMagicPush  (correctWords) (pvpState.enemyCorrectWords) (pvpState.particlesWidth)
                 let newMagic=(resizeMagic (pvpState.particlesWidth))
                 pure unit
                 H.modify_ $ updatePVP \st -> st{
@@ -217,10 +221,7 @@ entryComponent =
                                     wpm = myNewWPM,
                                     wrongWordCounter=myNewWrongWordCounter,
                                     particlesWidth=particlesWidthUpdate}
-                let player2WPM = myNewWPM
-                --let correctWords = myNewWordCounter-myNewWrongWordCounter
-                --liftEffect $ WS.sendString pvpState.webSocket $ stringify $ encodeJson {player2WPM,correctWords}
-                                      
+                let player2WPM = myNewWPM    
                 _<-liftEffect $ cleanInputBox unit
                 pure unit
               _ -> do
@@ -302,21 +303,16 @@ entryComponent =
                                                   case state of
                                                      PVP pvpState -> do
                                                       if dataID==(fromJustString pvpState.opponentID) then do
-                                                    
                                                        let previousEnemyCorrectWords=pvpState.enemyCorrectWords
-                                                       log(show previousEnemyCorrectWords <> "second val :"<> show numberOfCorrectWords)
                                                        let updatedParticlesWidth = pvpState.particlesWidth + (calculateMagicPush previousEnemyCorrectWords numberOfCorrectWords)
                                                        log(show updatedParticlesWidth)
                                                        H.modify_ $ updatePVP $ \st->st{particlesWidth=updatedParticlesWidth,enemyWPM=wpm,enemyCorrectWords=numberOfCorrectWords}
-                                                       log(show pvpState.enemyWPM)
-                                                       --void $ liftEffect $ changeParticleSpeedandWidth (fromJustNumber pvpState.enemyWPM) (pvpState.particlesWidth)
-                                                       -- $ liftEffect $ (resizeMagic (pvpState.particlesWidth))  
                                                        void $ liftEffect $ changeParticleSpeed2 (fromJustNumber pvpState.enemyWPM)
                                                       else pure unit
                                                      _->do
                                                        pure unit
                                                   pure unit
-       SetPlayerConnected id opponentName  -> do
+       SetPlayerConnected id opponentName textId  -> do
                                     state <- H.get
                                     case state of
                                      PVP pvpState ->do
@@ -324,18 +320,20 @@ entryComponent =
                                       then
                                        do
                                        H.modify_ $ updatePVP $ \st->st{enemyName=opponentName,opponentID=Just id, hasOpponent=true}
-                                       log(pvpState.playerName <> "passed")
+                                       if(Just textId == Just pvpState.textNo) then do
+                                         pure unit
+                                       else H.modify_ $ updatePVP $ \st->st{textNo=textId}
                                        let name =  pvpState.playerName
                                        let playerID =  pvpState.myID
-                                       liftEffect $ WS.sendString pvpState.webSocket $ stringify $ encodeJson {playerID, name}
+                                       let textNumber =  textId
+                                       liftEffect $ WS.sendString pvpState.webSocket $ stringify $ encodeJson {playerID, name,textNumber}
                                        H.modify_ $ updatePVP $ \st->st{notInitialized=false}
                                        _ <- H.subscribe' \sid->
                                         ES.affEventSource \emitter -> do
                                         _ <- Aff.forkAff $ repeatAction emitter 1000.0 (ActionPVP (DecrementInitialTimer sid)) 
                                         pure mempty
                                        pure unit
-                                       else
-                                        log(pvpState.playerName <> "did not pass")
+                                       else pure unit
                                      _->do
                                       pure unit
     
@@ -363,7 +361,7 @@ entryComponent =
                 mynowtime <- liftEffect nowTime
                 let myNewWordCounter = pveState.wordCounter + 1
                 let timeDifference = lift2 diff (Just mynowtime) pveState.myFirstTime
-                let myText =fromJustString (myWords !!pveState.wordCounter)
+                let myText =fromJustString ((myWords pveState.textNo) !!pveState.wordCounter)
                 let myNewWrongWordCounter=pveState.wrongWordCounter+incrementor s myText
                 let myNewWPM = calcWPM (myNewWordCounter-myNewWrongWordCounter) timeDifference
                 let myNewZombiePosition = pveState.zombiePosition+zombiePushValue s myText
@@ -414,24 +412,34 @@ entryComponent =
 
     render (Entry entrystate) =
      HH.div
-        [style "width:50%; background-color:#2c2f33; display:grid; justify-content:center;allign-items:center;"]
+        [style "width:80%; background-color:#2c2f33; display:flex;flex-wrap:wrap; justify-content:center;allign-items:center;"]
         [HH.div
-        [style "width:100%; background-color:transparent;"]
-        [HH.button [ HE.onClick \_ -> Just (ActionEntry RunPVE) ][ HH.text "Play PVE" ]
+        [style flexDivCenterItems]
+        [HH.button  
+        [style (buttonsCss "1392A4" "0AD4F0"), HE.onClick \_ -> Just (ActionEntry RunPVE) ]
+        [ HH.text "Play PVE" ] 
         ],
         HH.div
-        [style "width:100%; background-color:#2c2f33;"]
-        [HH.button [ HE.onClick \_ -> Just (ActionEntry (RunPVP $ fromJustString entrystate.name)) ][ HH.text "Play PVP" ]
+        [style flexDivCenterItems]
+        [HH.button 
+        [ style (buttonsCss "BC6513" "E48D3A"), HE.onClick \_ -> Just (ActionEntry (RunPVP $ fromJustString entrystate.name)) ]
+        [ HH.text "Play PVP" ]
             ],
         HH.div
-        [style "width:100%; background-color:#2c2f33;"]
-        [HH.input [ HE.onValueInput \s -> Just(ActionEntry(SetName s)) ]
+        [style flexDivCenterItems]
+        [HH.input [HP.placeholder "What is your name?" ,style inputBoxCSS, HE.onValueInput \s -> Just(ActionEntry(SetName s)) ]
             ],
         HH.div
-        [style "width:100%; background-color:#2c2f33;"]
+        [style flexDivCenterItems]
         [HH.p
         [style"color:yellow;font:40px Comic Sans;min-width:300px;text-align:center;"] 
-            [ HH.text $ "Wizard name: " <> fromJustString initialEntrystate.name]]
+            [ HH.text $ "Wizard name: " <> fromJustString entrystate.name]]
+        ,HH.div
+        [style flexDivCenterItems]
+        [HH.img
+        [HP.src  "images/grimoire.png"
+        ,HP.height 400
+        ,HP.width 600]]
         ]
     render (PVP myPVPstate) =
      HH.div
@@ -468,9 +476,9 @@ entryComponent =
           ,HH.div  
         [style"display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%"]
         [HH.div  
-        [style"display:inline-flex;width:100%;justify-self:center;margin-top:10%;background-color:transparent;"]
+        [style"display:inline-flex;width:100%;justify-self:center;margin-top:10%;margin-bottom:15%;background-color:transparent;"]
         [HH.div
-        [style("position:relative;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;left:0px;top:50px")]
+        [style("position:absolute;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;left:15%;top:32%")]
         [HH.img
         [HP.src  "images/mage.gif"
         ,HP.height 150
@@ -485,10 +493,10 @@ entryComponent =
         [style("position:absolute;display: inline-flex; flex-wrap:nowrap; width:60%;justify-content:space-between;justify-self:center;top:50%")]
         [HH.p
         [style"position:relative;font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:yellow;text-shadow: 0px 2px 3px #555;"] 
-            [HH.text $  (myPVPstate.playerName <> myPVPstate.myID)]
+            [HH.text $  (myPVPstate.playerName)]
         ,HH.p
         [style"position:relative;font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:yellow;text-shadow: 0px 2px 3px #555;"] 
-            [HH.text $  (myPVPstate.enemyName<> fromJustString(myPVPstate.opponentID))]
+            [HH.text $  (myPVPstate.enemyName)]
         ]
         ]
         ,
@@ -496,7 +504,7 @@ entryComponent =
         [style "width:100%; background-color:#2c2f33;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%"]
         [HH.p
         [style"font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:orange;text-shadow: 0px 2px 3px #555;min-width:100%"] 
-            [HH.text $  (fromJustString (myWords !! myPVPstate.wordCounter))<>" "<> (fromJustString (myWords !! (myPVPstate.wordCounter+1)))<>" "<> (fromJustString (myWords !! (myPVPstate.wordCounter+2)))]
+            [HH.text $  (fromJustString ((myWords myPVPstate.textNo) !! myPVPstate.wordCounter))<>" "<> (fromJustString ((myWords myPVPstate.textNo) !! (myPVPstate.wordCounter+1)))<>" "<> (fromJustString ((myWords myPVPstate.textNo) !! (myPVPstate.wordCounter+2)))]
         ,HH.input
             [ HP.id_ "inp",
             HE.onValueChange \s -> Just (ActionPVP (SendInputpvp s)),
@@ -521,19 +529,19 @@ entryComponent =
             HH.p
             [style $ pveOutcome myPVEstate.combatOutcome] 
             [ HH.text myPVEstate.combatOutcome],
-            HH.div[style"position:relative;width:100%;height:150px;"][
+            HH.div[style"position:relative;width:100%;height:100px;"][
             HH.p
-            [style "width:300px;float:left;font-size:30px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;padding-left:20px;"] 
+            [style "width:100%;font-size:30px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;text-align:center;"] 
             [ HH.text $ "WPM: " <> toStringWith (precision 3 ) (fromJustNumber myPVEstate.wpm)]
             ],
-            HH.div[style"position:relative;width:100%;height:150px;"][
+            HH.div[style"position:relative;width:100%;height:100px;"][
             HH.p
-            [style "width:300px;float:left;font-size:30px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;padding-left:20px;"] 
+            [style "width:100%;font-size:30px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;text-align:center;"] 
             [ HH.text $ "Correct Words: " <> show (myPVEstate.wordCounter-myPVEstate.wrongWordCounter)]
             ],
-            HH.div[style"position:relative;width:100%;height:200px;"][
+            HH.div[style"position:relative;width:100%;height:100px;"][
             HH.p
-            [style "width:100%;font-size:20px;color:orange;text-shadow: 0px 0px 5px #555;margin:10px;"] 
+            [style "width:100%;font-size:20px;color:orange;text-shadow: 0px 0px 5px #555;margin:10px;text-align:center;"] 
             [ HH.text $ "You typed " <> (toStringWith (precision 3) (fromJustNumber(myPVEstate.wpm)/60.0)) <> " words in a second!" ]
             ]
             ]
@@ -559,7 +567,7 @@ entryComponent =
         
         [HH.p
         [style"font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:orange;text-shadow: 0px 2px 3px #555;min-width:100%"] 
-            [HH.text $  (fromJustString (myWords !! myPVEstate.wordCounter))<>" "<> (fromJustString (myWords !! (myPVEstate.wordCounter+1)))<>" "<> (fromJustString (myWords !! (myPVEstate.wordCounter+2)))]
+            [HH.text $  (fromJustString ((myWords myPVEstate.textNo) !! myPVEstate.wordCounter))<>" "<> (fromJustString ((myWords myPVEstate.textNo) !! (myPVEstate.wordCounter+1)))<>" "<> (fromJustString ((myWords myPVEstate.textNo) !! (myPVEstate.wordCounter+2)))]
         ,HH.input
             [ HP.id_ "inp",
             HE.onValueChange \s -> Just (ActionPVE (SendInput s)),
@@ -595,8 +603,8 @@ fixPVPmagicRender = do
 
 modalCSS :: Boolean -> String
 modalCSS flag
- | flag == true = "width:50%; height:wrap-content;left:25%;top:15%;z-index:999; position:absolute;background-color:#23272a;display:block;justify-content:space-between;overflow:wrap;"
- | otherwise = "width:50%; height:wrap-content;left:25%;top:15%;z-index:999; position:absolute;background-color:#23272a;display:none;"
+ | flag == true = "width:50%; height:wrap-content;left:25%;top:15%;z-index:999; position:absolute;background-color:#23272a;display:block;justify-content:space-between;overflow:wrap;border-width:5px;border-style:groove;border-color:orange;"
+ | otherwise = "width:50%; height:wrap-content;left:25%;top:15%;z-index:999; position:absolute;background-color:#23272a;display:none;border-width:5px;border-style:groove;border-color:orange;"
 
 battleOutcomeTitle :: String -> String
 battleOutcomeTitle outcome 
@@ -609,8 +617,26 @@ pveOutcome outcome
  | outcome == "Win" = "width:100%;margin: 50px auto;text-align: center;text-shadow: -1px -1px 0px rgba(255,255,255,0.3), 1px 1px 0px rgba(0,0,0,0.8);color:rgba(30, 130, 76, 1);opacity: 1;font: 700 80px 'Bitter'"
  | otherwise = "width:100%;margin: 50px auto;text-align: center;text-shadow: -1px -1px 0px rgba(255,255,255,0.3), 1px 1px 0px rgba(0,0,0,0.8);color:rgba(150, 40, 27, 1);opacity: 1;font: 700 80px 'Bitter'"
 
+buttonsCss :: String->String-> String
+buttonsCss color1 color2 = "width:200px;height:70px;"<>
+    "background: linear-gradient(to left top, #"<>color1<>" 50%, #"<>color2<>" 50%);"<>
+    "border-style: none;"<>
+    "color:#fff;"<>
+    "font-size: 23px;"<>
+    "letter-spacing: 3px;"<>
+    "font-family: 'Lato';"<>
+    "font-weight: 600;"<>
+    "outline: none;"<>
+    "position: relative;"<>
+    "margin: 10px;"<>
+    "overflow: hidden;"<>
+    "box-shadow: 0px 1px 2px rgba(0,0,0,.2);"
 
+flexDivCenterItems :: String
+flexDivCenterItems="width:100%; display:flex; flex-wrap:wrap;justify-content:center; background-color:transparent;"
 
+inputBoxCSS :: String
+inputBoxCSS="border: none;border-bottom: 2px solid orange;background:transparent; width:60%;height:60px;font-size:50px;color:white;text-align:center;margin:10px;"
 -- pure functions --------------------------------------------------------------------------------------------------------------------
 
 
@@ -639,6 +665,10 @@ fromJustString (Just s) = s
 fromJustNumber :: Maybe Number -> Number
 fromJustNumber Nothing = 1.0
 fromJustNumber (Just s) = s
+
+fromJustInt :: Maybe Int -> Int
+fromJustInt Nothing = 0
+fromJustInt (Just s) = s
 
 wpmSetup :: Maybe Number -> Number
 wpmSetup Nothing = 0.0
@@ -684,15 +714,25 @@ magicPushCalculator input word
     | input == word = 10.0
     | otherwise = 0.0
 
-myParagraph :: String
-myParagraph = "The world of Dark Souls is a world of cycles. Kingdoms rise and fall, ages come and go, and even time can end and restart as the flame fades and is renewed. These cycles are linked to the First Flame, a mysterious manifestation of life that divides and defines separate states such as heat and cold, or life and death. As the First Flame fades, these differences also begin to fade, such as life and death having little distinction, and humans becoming Undead. The onset of an Age of Dark, the time when the First Flame has fully died, is marked by endless nights, rampant undeath, time, space, and reality breaking down, lands collapsing and converging on one another, people mutating into monsters, darkness covering the world, and the Gods losing their power. To avoid this and prolong the Age of Fire, the bearer of a powerful soul must 'link' themselves to the First Flame, becoming the fuel for another age. If this is not done, the First Flame will eventually die, and an Age of Dark will begin."
+text1 :: String
+text1= "He walked down the steps from the train station in a bit of a hurry knowing the secrets in the briefcase must be secured as quickly as possible. Bounding down the steps, he heard something behind him and quickly turned in a panic. There was nobody there but a pair of old worn-out shoes were placed neatly on the steps he had just come down. Had he past them without seeing them? It didn't seem possible. He was about to turn and be on his way when a deep chill filled his body. Colors bounced around in her head. They mixed and threaded themselves together. Even colors that had no business being together. They were all one, yet distinctly separate at the same time. How was she going to explain this to the others? What were they eating? It didn't taste like anything she had ever eaten before and although she was famished, she didn't dare ask. She knew the answer would be one she didn't want to hear."
+text2 :: String
+text2="It was a rat's nest. Not a literal one, but that is what her hair seemed to resemble every morning when she got up. It was going to take at least an hour to get it under control and she was sick and tired of it. She peered into the mirror and wondered if it was worth it. It wasn't. She opened the drawer and picked up the hair clippers. The alarm went off and Jake rose awake. Rising early had become a daily ritual, one that he could not fully explain. From the outside, it was a wonder that he was able to get up so early each morning for someone who had absolutely no plans to be productive during the entire day. The trees, therefore, must be such old and primitive techniques that they thought nothing of them, deeming them so inconsequential that even savages like us would know of them and not be suspicious. At that, they probably didn't have too much time after they detected us orbiting and intending to land. And if that were true, there could be only one place where their civilization was hidden."
+text3 :: String
+text3 = "Sitting in the sun, away from everyone who had done him harm in the past, he quietly listened to those who roamed by. He felt at peace in the moment, hoping it would last, but knowing the reprieve would soon come to an end. He closed his eyes, the sun beating down on face and he smiled. He smiled for the first time in as long as he could remember. Are you getting my texts??? she texted to him. He glanced at it and chuckled under his breath. Of course he was getting them, but if he wasn't getting them, how would he ever be able to answer? He put the phone down and continued on his project. He was ignoring her texts and he planned to continue to do so. The boy walked down the street in a carefree way, playing without notice of what was about him. He didn't hear the sound of the car as his ball careened into the road. He took a step toward it, and in doing so sealed his fate."
+text4 :: String
+text4 = "She never liked cleaning the sink. It was beyond her comprehension how it got so dirty so quickly. It seemed that she was forced to clean it every other day. Even when she was extra careful to keep things clean and orderly, it still ended up looking like a mess in a couple of days. What she didn't know was there was a tiny creature living in it that didn't like things neat. He sat across from her trying to imagine it was the first time. It wasn't. Had it been a hundred? It quite possibly could have been. Two hundred? Probably not. His mind wandered until he caught himself and again tried to imagine it was the first time. Green vines attached to the trunk of the tree had wound themselves toward the top of the canopy. Ants used the vine as their private highway, avoiding all the creases and crags of the bark, to freely move at top speed from top to bottom or bottom to top depending on their current chore. At least this was the way it was supposed to be. Something had damaged the vine overnight halfway up the tree leaving a gap in the once pristine ant highway."
+text5 :: String
+text5 = "Her eyebrows were a shade darker than her hair. They were thick and almost horizontal, emphasizing the depth of her eyes. She was rather handsome than beautiful. Her face was captivating by reason of a certain frankness of expression and a contradictory subtle play of features. Her manner was engaging. It was difficult for him to admit he was wrong. He had been so certain that he was correct and the deeply held belief could never be shaken. Yet the proof that he had been incorrect stood right before his eyes. See daddy, I told you that they are real! his daughter excitedly proclaimed. It went through such rapid contortions that the little bear was forced to change his hold on it so many times he became confused in the darkness, and could not, for the life of him, tell whether he held the sheep right side up, or upside down. But that point was decided for him a moment later by the animal itself, who, with a sudden twist, jabbed its horns so hard into his lowest ribs that he gave a grunt of anger and disgust."
 
-myWords :: Array String
-myWords = split (Pattern " ") myParagraph
+myWords :: Int->Array String
+myWords int  = split (Pattern " ") (pickLore int)
 
-myarrayedstring :: String
-myarrayedstring = joinWith "," myWords
+lore :: Array String
+lore = [text1,text2,text3,text4,text5]
 
+pickLore :: Int -> String
+pickLore position = fromJustString(index lore position)
 
 generateRandomNumber :: Effect Int
 generateRandomNumber = randomInt 100000 999999
@@ -700,7 +740,6 @@ generateRandomNumber = randomInt 100000 999999
 
 getStringID::String->String                 
 getStringID id = id
-
 
 repeatAction :: Emitter Aff Action -> Number -> Action -> Aff Unit
 repeatAction emitter t action = aux
@@ -712,7 +751,7 @@ repeatAction emitter t action = aux
 
 -- message types:
 type EnemyState = { playerID::String, player2WPM :: Maybe Number, correctWords :: Int }
-type ID = { playerID::String, name :: String }
+type ID = { playerID::String, name :: String, textNumber::Int }
 
 messageToAction :: String -> Either String ActionPVP
 messageToAction msg = do
@@ -723,8 +762,8 @@ messageToAction msg = do
     ({playerID,player2WPM, correctWords} :: EnemyState) <- decodeJson json
     pure (UpdatePlayer2 player2WPM  correctWords playerID)
   parseSetIt json = do
-    ({playerID,name} :: ID) <- decodeJson json
-    pure (SetPlayerConnected playerID name )
+    ({playerID,name,textNumber} :: ID) <- decodeJson json
+    pure (SetPlayerConnected playerID name textNumber )
 
   describeErr :: forall b.String -> Either JsonDecodeError b -> Either String b
   describeErr s = mapLeft (\ err -> s <> (printJsonDecodeError err))
