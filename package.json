@@ -11,6 +11,7 @@
     "build-prod": "mkdir -p prod && cp dev/index.html prod/ && rm -rf dist && spago bundle-app --to prod/index.js && parcel build prod/index.html"
   },
   "dependencies": {
-    "ws": "^7.4.4"
+    "ws": "^7.4.4",
+    "node":"v12.14.1."
   }
 }
