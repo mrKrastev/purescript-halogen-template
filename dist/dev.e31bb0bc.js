@@ -58750,7 +58750,7 @@ var entryComponent = function entryComponent(dictMonadEffect) {
       ;
 
       if (v instanceof RunPVP) {
-        return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Effect_Class.liftEffect(Halogen_Query_HalogenM.monadEffectHalogenM(dictMonadAff.MonadEffect0()))(Web_Socket_WebSocket.create("ws://localhost:3000")([])))(function (ws) {
+        return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Effect_Class.liftEffect(Halogen_Query_HalogenM.monadEffectHalogenM(dictMonadAff.MonadEffect0()))(Web_Socket_WebSocket.create("wss://typing-mage.herokuapp.com/")([])))(function (ws) {
           return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Query_HalogenM.bindHalogenM)(Effect_Aff_Class.liftAff(Halogen_Query_HalogenM.monadAffHalogenM(dictMonadAff))(Effect_Aff.delay(100.0)))(function () {
             return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Query_HalogenM.bindHalogenM)(Data_Functor["void"](Halogen_Query_HalogenM.functorHalogenM)(Halogen_Query_HalogenM.subscribe(Halogen_Query_EventSource.affEventSource(dictMonadAff)(function (emitter) {
               return Control_Bind.bind(Effect_Aff.bindAff)(Effect_Aff.forkAff(WSListener.setupWSListener(ws)(function (msg) {
@@ -62358,7 +62358,7 @@ module.exports = {
 };
 },{"../App.EntryPoint/index.js":"../output/App.EntryPoint/index.js","../Control.Bind/index.js":"../output/Control.Bind/index.js","../Data.Unit/index.js":"../output/Data.Unit/index.js","../Effect.Aff/index.js":"../output/Effect.Aff/index.js","../Effect.Aff.Class/index.js":"../output/Effect.Aff.Class/index.js","../Effect.Class/index.js":"../output/Effect.Class/index.js","../Halogen.Aff.Util/index.js":"../output/Halogen.Aff.Util/index.js","../Halogen.VDom.Driver/index.js":"../output/Halogen.VDom.Driver/index.js","../Web.DOM.Element/index.js":"../output/Web.DOM.Element/index.js","../Web.HTML.HTMLElement/index.js":"../output/Web.HTML.HTMLElement/index.js"}],"index.js":[function(require,module,exports) {
 require("../output/Main/index.js").main();
-},{"../output/Main/index.js":"../output/Main/index.js"}],"../node_modules/parcel/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"../output/Main/index.js":"../output/Main/index.js"}],"../../../../AppData/Roaming/npm/node_modules/parcel/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -62386,7 +62386,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "65120" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59440" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
@@ -62562,5 +62562,5 @@ function hmrAcceptRun(bundle, id) {
     return true;
   }
 }
-},{}]},{},["../node_modules/parcel/src/builtins/hmr-runtime.js","index.js"], null)
+},{}]},{},["../../../../AppData/Roaming/npm/node_modules/parcel/src/builtins/hmr-runtime.js","index.js"], null)
 //# sourceMappingURL=/dev.e31bb0bc.js.map

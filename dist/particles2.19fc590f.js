@@ -117,7 +117,7 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   }
 
   return newRequire;
-})({"../node_modules/process/browser.js":[function(require,module,exports) {
+})({"../../../../AppData/Roaming/npm/node_modules/parcel/node_modules/process/browser.js":[function(require,module,exports) {
 
 // shim for using process in browser
 var process = module.exports = {}; // cached from whatever global is present so that test runners that stub it
@@ -1734,7 +1734,7 @@ window.particlesJS.load = function (tag_id, path_config_json, callback) {
 
   xhr.send();
 };
-},{"process":"../node_modules/process/browser.js"}],"../node_modules/parcel/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"process":"../../../../AppData/Roaming/npm/node_modules/parcel/node_modules/process/browser.js"}],"../../../../AppData/Roaming/npm/node_modules/parcel/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -1762,7 +1762,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "65120" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59440" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
@@ -1938,5 +1938,5 @@ function hmrAcceptRun(bundle, id) {
     return true;
   }
 }
-},{}]},{},["../node_modules/parcel/src/builtins/hmr-runtime.js","particles2.js"], null)
+},{}]},{},["../../../../AppData/Roaming/npm/node_modules/parcel/src/builtins/hmr-runtime.js","particles2.js"], null)
 //# sourceMappingURL=/particles2.19fc590f.js.map
