@@ -1,6 +1,7 @@
 {
  
   "scripts": {
+    "preinstall": "rm -rf /dist",
     "start": "node ws-broadcast-express.js"
   },
   "dependencies": {
