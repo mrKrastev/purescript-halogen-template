@@ -9306,7 +9306,7 @@ var PS = {};
                   });
               };
               if (v instanceof RunPVP) {
-                  return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Effect_Class.liftEffect(Halogen_Query_HalogenM.monadEffectHalogenM(dictMonadAff.MonadEffect0()))(Web_Socket_WebSocket.create("ws://localhost:3000")([  ])))(function (ws) {
+                  return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Effect_Class.liftEffect(Halogen_Query_HalogenM.monadEffectHalogenM(dictMonadAff.MonadEffect0()))(Web_Socket_WebSocket.create("wss://typing-mage.herokuapp.com/")([  ])))(function (ws) {
                       return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Query_HalogenM.bindHalogenM)(Effect_Aff_Class.liftAff(Halogen_Query_HalogenM.monadAffHalogenM(dictMonadAff))(Effect_Aff.delay(100.0)))(function () {
                           return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Query_HalogenM.bindHalogenM)(Data_Functor["void"](Halogen_Query_HalogenM.functorHalogenM)(Halogen_Query_HalogenM.subscribe(Halogen_Query_EventSource.affEventSource(dictMonadAff)(function (emitter) {
                               return Control_Bind.bind(Effect_Aff.bindAff)(Effect_Aff.forkAff(WSListener.setupWSListener(ws)(function (msg) {

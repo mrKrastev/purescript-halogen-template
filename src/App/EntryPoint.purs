@@ -173,7 +173,7 @@ entryComponent =
          _<-liftEffect $ renderMagicJs unit
          pure unit  
         RunPVP name -> do
-            ws <- liftEffect $ WS.create "ws://localhost:3000" []
+            ws <- liftEffect $ WS.create "wss://typing-mage.herokuapp.com/" []
             liftAff $ delay (Milliseconds 100.0) -- allow ws to initialise
             void $ H.subscribe $
              ES.affEventSource \ emitter -> do
