@@ -8,7 +8,7 @@ var express = require('express');
 var app = express();
 
 
-app.use('/', express.static('/dist'), serveIndex('/dist'));
+app.use('dist');
 /*const server = express()
 .get('/', (req,res) => res.sendFile(__dirname + '/dev/index.html'))
 .get('/', (req,res) => res.sendFile(__dirname + '/dev/app.js'))
