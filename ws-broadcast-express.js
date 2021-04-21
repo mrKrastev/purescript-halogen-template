@@ -5,10 +5,6 @@ const WebSocket = require('ws');
 
 const PORT = process.env.PORT || 3000;
 var express = require('express');
-var app = express();
-
-
-app.use(']public');
 const server = express()
 .get('/', (req,res) => res.sendFile(__dirname + '/dev/index.html'))
 .get('/index.js', (req,res) => res.sendFile(__dirname + '/index.js'))
