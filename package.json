@@ -1,9 +1,6 @@
 {
  
   "scripts": {
-    "build": "spago build",
-    "serve": "parcel dev/index.html --open",
-    "build-prod": "mkdir -p prod && cp dev/index.html prod/ && rm -rf dist && spago bundle-app --to prod/index.js && parcel build prod/index.html",
     "start": "node ws-broadcast-express.js"
   },
   "dependencies": {
