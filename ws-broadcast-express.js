@@ -9,13 +9,9 @@ var app = express();
 
 
 app.use(']public');
-/*const server = express()
+const server = express()
 .get('/', (req,res) => res.sendFile(__dirname + '/dev/index.html'))
-.get('/', (req,res) => res.sendFile(__dirname + '/dev/app.js'))
-.get('/', (req,res) => res.sendFile(__dirname + '/dev/app2.js'))
-
-
-.get('/index.js', (req,res) => res.sendFile(__dirname + '/index.js'))*/
+.get('/index.js', (req,res) => res.sendFile(__dirname + '/index.js'))
 app.listen(PORT, () => console.log(`Express listening on ${PORT}`));
 
 const wss = new WebSocket.Server({ server });
