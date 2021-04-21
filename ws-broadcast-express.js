@@ -6,9 +6,9 @@ const WebSocket = require('ws');
 const PORT = process.env.PORT || 3000;
 
 const server = express()
-.get('/', (req,res) => res.sendFile(__dirname + '/dist/'))
+.get('/', (req,res) => res.sendFile(__dirname + '/dist/**'))
 .get('/', (req,res) => res.sendFile(__dirname + '/dist/index.html'))
-.get('/index.js', (req,res) => res.sendFile(__dirname + '/index.js'))
+.get('/index.js', (req,res) => res.sendFile(__dirname + '/dist/index.js'))
 .listen(PORT, () => console.log(`Express listening on ${PORT}`));
 
 const wss = new WebSocket.Server({ server });
