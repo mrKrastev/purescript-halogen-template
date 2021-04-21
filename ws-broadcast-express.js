@@ -8,7 +8,7 @@ var express = require('express');
 const server = express()
 .get('/', (req,res) => res.sendFile(__dirname + '/dev/index.html'))
 .get('/index.js', (req,res) => res.sendFile(__dirname + '/index.js'))
-app.listen(PORT, () => console.log(`Express listening on ${PORT}`));
+.listen(PORT, () => console.log(`Express listening on ${PORT}`));
 
 const wss = new WebSocket.Server({ server });
 
