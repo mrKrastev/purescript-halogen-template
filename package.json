@@ -1,7 +1,7 @@
 {
  
   "scripts": {
-    "start": "node ws-broadcast-express.js",
+    "start": "node ws-broadcast-express.js"
     },
   "dependencies": {
     "ws": "^7.4.4",
