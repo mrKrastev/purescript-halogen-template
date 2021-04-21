@@ -4,13 +4,11 @@ const express = require('express');
 const WebSocket = require('ws');
 
 const PORT = process.env.PORT || 3000;
-var path = require('path');
 var express = require('express');
 var app = express();
 
-var htmlPath = path.join(__dirname, 'dist');
 
-app.use(express.static(htmlPath));
+app.use('/dist', express.static('/dist'), serveIndex('/dist'));
 /*const server = express()
 .get('/', (req,res) => res.sendFile(__dirname + '/dev/index.html'))
 .get('/', (req,res) => res.sendFile(__dirname + '/dev/app.js'))
