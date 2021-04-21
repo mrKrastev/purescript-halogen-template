@@ -4,11 +4,21 @@ const express = require('express');
 const WebSocket = require('ws');
 
 const PORT = process.env.PORT || 3000;
+var path = require('path');
+var express = require('express');
+var app = express();
 
-const server = express()
-.get('/', (req,res) => res.sendFile(__dirname + '/index.html'))
-.get('/index.js', (req,res) => res.sendFile(__dirname + '/index.js'))
-.listen(PORT, () => console.log(`Express listening on ${PORT}`));
+var htmlPath = path.join(__dirname, 'dist');
+
+app.use(express.static(htmlPath));
+/*const server = express()
+.get('/', (req,res) => res.sendFile(__dirname + '/dev/index.html'))
+.get('/', (req,res) => res.sendFile(__dirname + '/dev/app.js'))
+.get('/', (req,res) => res.sendFile(__dirname + '/dev/app2.js'))
+
+
+.get('/index.js', (req,res) => res.sendFile(__dirname + '/index.js'))*/
+app.listen(PORT, () => console.log(`Express listening on ${PORT}`));
 
 const wss = new WebSocket.Server({ server });
 
