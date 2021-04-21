@@ -7,7 +7,7 @@ const PORT = process.env.PORT || 3000;
 
 const server = express();
 server.use('/', express.static(__dirname + "/dev"));
-server.get('/index.js', (req,res) => res.sendFile(__dirname + '/index.js'))
+server.get('/index.js', (req,res) => res.sendFile(__dirname + './index.js'))
 /*.get('/', (req,res) => res.sendFile(__dirname + '/dev/index.html'))
 
 .get('/', (req,res) => res.sendFile(__dirname + '/dev/app2.js'))
