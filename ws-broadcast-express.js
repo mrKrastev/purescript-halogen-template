@@ -6,7 +6,7 @@ const WebSocket = require('ws');
 const PORT = process.env.PORT || 3000;
 
 const server = express();
-server.use('dist');
+server.use('public/dist');
 server.listen(PORT, () => console.log(`Express listening on ${PORT}`));
 /*.get('/', (req,res) => res.sendFile(__dirname + '/dev/index.html'))
 .get('/index.js', (req,res) => res.sendFile(__dirname + '/index.js'))*/
