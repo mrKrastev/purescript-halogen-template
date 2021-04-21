@@ -8,7 +8,7 @@ var express = require('express');
 var app = express();
 
 
-app.use('dist');
+app.use(']public');
 /*const server = express()
 .get('/', (req,res) => res.sendFile(__dirname + '/dev/index.html'))
 .get('/', (req,res) => res.sendFile(__dirname + '/dev/app.js'))
