@@ -58407,7 +58407,7 @@ var entryComponent = function entryComponent(dictMonadEffect) {
           $tco_done = true;
           return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Control_Monad_State_Class.get(Halogen_Query_HalogenM.monadStateHalogenM))(function (state) {
             if (state instanceof PVP) {
-              var $128 = state.value0.notInitialized && state.value0.hasOpponent === false;
+              var $128 = state.value0.myID !== v.value0 && state.value0.hasOpponent === false;
 
               if ($128) {
                 return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Query_HalogenM.bindHalogenM)(Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(updatePVP(function (st) {
@@ -62412,7 +62412,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "63923" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "64184" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

@@ -319,7 +319,7 @@ entryComponent =
                                     state <- H.get
                                     case state of
                                      PVP pvpState ->do
-                                      if(pvpState.notInitialized && pvpState.hasOpponent==false)
+                                      if(pvpState.myID /= id && pvpState.hasOpponent==false)
                                       then
                                        do
                                        H.modify_ $ updatePVP $ \st->st{enemyName=opponentName,opponentID=Just id, hasOpponent=true,showText=true}
