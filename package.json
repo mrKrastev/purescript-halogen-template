@@ -1,7 +1,7 @@
 {
  
   "scripts": {
-    "start": "node ws-broadcast-express.js"
+    "start": "node ws-broadcast-express.js", "serve": "parcel dev/index.html --open"
    },
   "dependencies": {
     "ws": "^7.4.4",

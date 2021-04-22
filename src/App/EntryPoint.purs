@@ -177,7 +177,7 @@ entryComponent =
          pure unit  
         RunPVP name -> do
             ws <- liftEffect $ WS.create "wss://typing-mage.herokuapp.com" []
-            liftAff $ delay (Milliseconds 100.0) -- allow ws to initialise
+            liftAff $ delay (Milliseconds 1000.0) -- allow ws to initialise
             void $ H.subscribe $
              ES.affEventSource \ emitter -> do
              fiber <- Aff.forkAff $ do
