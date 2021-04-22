@@ -10,6 +10,7 @@ import Control.Monad.State (class MonadState)
 import Data.Argonaut (JsonDecodeError, decodeJson, encodeJson, parseJson, printJsonDecodeError, stringify)
 import Data.Argonaut as Console
 import Data.Array (index, (!!))
+import Data.Array.NonEmpty (findLastIndex)
 import Data.DateTime (Time)
 import Data.Either (Either(..))
 import Data.Int (fromNumber, toNumber)
@@ -88,7 +89,8 @@ type PvpState={
               hasOpponent::Boolean,
               opponentID::Maybe String,
               myID::String,
-              textNo::Int}
+              textNo::Int,
+              showText::Boolean}
               
 
 updatePVE::(PveState->PveState)-> State->State
@@ -143,7 +145,8 @@ initialPVPstate webSocket name id textNumber = {wrongWordCounter:0,
               hasOpponent:false,
               opponentID:Nothing,
               myID:id,
-              textNo:textNumber}
+              textNo:textNumber,
+              showText:false}
 
 
 data Action = ActionEntry ActionEntry | ActionPVE ActionPVE |ActionPVP ActionPVP 
@@ -319,7 +322,7 @@ entryComponent =
                                       if(pvpState.notInitialized && pvpState.hasOpponent==false)
                                       then
                                        do
-                                       H.modify_ $ updatePVP $ \st->st{enemyName=opponentName,opponentID=Just id, hasOpponent=true}
+                                       H.modify_ $ updatePVP $ \st->st{enemyName=opponentName,opponentID=Just id, hasOpponent=true,showText=true}
                                        if(Just textId == Just pvpState.textNo) then do
                                          pure unit
                                        else H.modify_ $ updatePVP $ \st->st{textNo=textId}
@@ -503,7 +506,7 @@ entryComponent =
         HH.div
         [style "width:100%; background-color:#2c2f33;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%"]
         [HH.p
-        [style"font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:orange;text-shadow: 0px 2px 3px #555;min-width:100%"] 
+        [style $ makeTextVisible myPVPstate.showText] 
             [HH.text $  (fromJustString ((myWords myPVPstate.textNo) !! myPVPstate.wordCounter))<>" "<> (fromJustString ((myWords myPVPstate.textNo) !! (myPVPstate.wordCounter+1)))<>" "<> (fromJustString ((myWords myPVPstate.textNo) !! (myPVPstate.wordCounter+2)))]
         ,HH.input
             [ HP.id_ "inp",
@@ -635,6 +638,11 @@ buttonsCss color1 color2 = "width:200px;height:70px;"<>
 flexDivCenterItems :: String
 flexDivCenterItems="width:100%; display:flex; flex-wrap:wrap;justify-content:center; background-color:transparent;"
 
+makeTextVisible :: Boolean -> String
+makeTextVisible flag 
+ | flag == true = "font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:orange;text-shadow: 0px 2px 3px #555;min-width:100%;display:block;"
+ | otherwise = "font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:orange;text-shadow: 0px 2px 3px #555;min-width:100%;display:none;"
+
 inputBoxCSS :: String
 inputBoxCSS="border: none;border-bottom: 2px solid orange;background:transparent; width:60%;height:60px;font-size:50px;color:white;text-align:center;margin:10px;"
 -- pure functions --------------------------------------------------------------------------------------------------------------------
@@ -736,7 +744,6 @@ pickLore position = fromJustString(index lore position)
 
 generateRandomNumber :: Effect Int
 generateRandomNumber = randomInt 100000 999999
-
 
 getStringID::String->String                 
 getStringID id = id

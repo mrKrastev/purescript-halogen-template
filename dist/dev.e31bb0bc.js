@@ -57493,7 +57493,7 @@ var zombiePushValue = function zombiePushValue(dictEq) {
       }
 
       ;
-      throw new Error("Failed pattern match at App.EntryPoint (line 708, column 1 - line 708, column 58): " + [input.constructor.name, word.constructor.name]);
+      throw new Error("Failed pattern match at App.EntryPoint (line 716, column 1 - line 716, column 58): " + [input.constructor.name, word.constructor.name]);
     };
   };
 };
@@ -57511,7 +57511,7 @@ var wrongWordIndicator = function wrongWordIndicator(dictEq) {
     }
 
     ;
-    throw new Error("Failed pattern match at App.EntryPoint (line 687, column 1 - line 692, column 26): " + [state.constructor.name]);
+    throw new Error("Failed pattern match at App.EntryPoint (line 695, column 1 - line 700, column 26): " + [state.constructor.name]);
   };
 };
 
@@ -57527,7 +57527,7 @@ var wpmSetup = function wpmSetup(v) {
   }
 
   ;
-  throw new Error("Failed pattern match at App.EntryPoint (line 673, column 1 - line 673, column 35): " + [v.constructor.name]);
+  throw new Error("Failed pattern match at App.EntryPoint (line 681, column 1 - line 681, column 35): " + [v.constructor.name]);
 };
 
 var updatePVP = function updatePVP(fn) {
@@ -57575,7 +57575,7 @@ var timerVisibility = function timerVisibility(timer) {
   }
 
   ;
-  throw new Error("Failed pattern match at App.EntryPoint (line 699, column 1 - line 699, column 33): " + [timer.constructor.name]);
+  throw new Error("Failed pattern match at App.EntryPoint (line 707, column 1 - line 707, column 33): " + [timer.constructor.name]);
 };
 
 var text5 = "Her eyebrows were a shade darker than her hair. They were thick and almost horizontal, emphasizing the depth of her eyes. She was rather handsome than beautiful. Her face was captivating by reason of a certain frankness of expression and a contradictory subtle play of features. Her manner was engaging. It was difficult for him to admit he was wrong. He had been so certain that he was correct and the deeply held belief could never be shaken. Yet the proof that he had been incorrect stood right before his eyes. See daddy, I told you that they are real! his daughter excitedly proclaimed. It went through such rapid contortions that the little bear was forced to change his hold on it so many times he became confused in the darkness, and could not, for the life of him, tell whether he held the sheep right side up, or upside down. But that point was decided for him a moment later by the animal itself, who, with a sudden twist, jabbed its horns so hard into his lowest ribs that he gave a grunt of anger and disgust.";
@@ -57613,7 +57613,7 @@ var pveOutcome = function pveOutcome(outcome) {
   }
 
   ;
-  throw new Error("Failed pattern match at App.EntryPoint (line 615, column 1 - line 615, column 31): " + [outcome.constructor.name]);
+  throw new Error("Failed pattern match at App.EntryPoint (line 618, column 1 - line 618, column 31): " + [outcome.constructor.name]);
 }; //CSS kek------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -57629,7 +57629,7 @@ var modalCSS = function modalCSS(flag) {
   }
 
   ;
-  throw new Error("Failed pattern match at App.EntryPoint (line 604, column 1 - line 604, column 30): " + [flag.constructor.name]);
+  throw new Error("Failed pattern match at App.EntryPoint (line 607, column 1 - line 607, column 30): " + [flag.constructor.name]);
 };
 
 var messageToAction = function messageToAction(msg) {
@@ -57674,6 +57674,21 @@ var messageToAction = function messageToAction(msg) {
   });
 };
 
+var makeTextVisible = function makeTextVisible(flag) {
+  if (flag === true) {
+    return "font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:orange;text-shadow: 0px 2px 3px #555;min-width:100%;display:block;";
+  }
+
+  ;
+
+  if (Data_Boolean.otherwise) {
+    return "font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:orange;text-shadow: 0px 2px 3px #555;min-width:100%;display:none;";
+  }
+
+  ;
+  throw new Error("Failed pattern match at App.EntryPoint (line 641, column 1 - line 641, column 37): " + [flag.constructor.name]);
+};
+
 var magicPushCalculator = function magicPushCalculator(dictEq) {
   return function (input) {
     return function (word) {
@@ -57688,7 +57703,7 @@ var magicPushCalculator = function magicPushCalculator(dictEq) {
       }
 
       ;
-      throw new Error("Failed pattern match at App.EntryPoint (line 712, column 1 - line 712, column 62): " + [input.constructor.name, word.constructor.name]);
+      throw new Error("Failed pattern match at App.EntryPoint (line 720, column 1 - line 720, column 62): " + [input.constructor.name, word.constructor.name]);
     };
   };
 };
@@ -57722,7 +57737,8 @@ var initialPVPstate = function initialPVPstate(webSocket) {
           hasOpponent: false,
           opponentID: Data_Maybe.Nothing.value,
           myID: id,
-          textNo: textNumber
+          textNo: textNumber,
+          showText: false
         };
       };
     };
@@ -57765,7 +57781,7 @@ var incrementor = function incrementor(dictEq) {
       }
 
       ;
-      throw new Error("Failed pattern match at App.EntryPoint (line 703, column 1 - line 703, column 51): " + [input.constructor.name, word.constructor.name]);
+      throw new Error("Failed pattern match at App.EntryPoint (line 711, column 1 - line 711, column 51): " + [input.constructor.name, word.constructor.name]);
     };
   };
 };
@@ -57795,7 +57811,7 @@ var generateFlavourText = function generateFlavourText(wpm1) {
     }
 
     ;
-    throw new Error("Failed pattern match at App.EntryPoint (line 651, column 1 - line 651, column 50): " + [wpm1.constructor.name, wpm2.constructor.name]);
+    throw new Error("Failed pattern match at App.EntryPoint (line 659, column 1 - line 659, column 50): " + [wpm1.constructor.name, wpm2.constructor.name]);
   };
 };
 
@@ -57811,7 +57827,7 @@ var fromJustString = function fromJustString(v) {
   }
 
   ;
-  throw new Error("Failed pattern match at App.EntryPoint (line 661, column 1 - line 661, column 41): " + [v.constructor.name]);
+  throw new Error("Failed pattern match at App.EntryPoint (line 669, column 1 - line 669, column 41): " + [v.constructor.name]);
 };
 
 var pickLore = function pickLore(position) {
@@ -57834,7 +57850,7 @@ var fromJustNumber = function fromJustNumber(v) {
   }
 
   ;
-  throw new Error("Failed pattern match at App.EntryPoint (line 665, column 1 - line 665, column 41): " + [v.constructor.name]);
+  throw new Error("Failed pattern match at App.EntryPoint (line 673, column 1 - line 673, column 41): " + [v.constructor.name]);
 };
 
 var fromJustInt = function fromJustInt(v) {
@@ -57849,7 +57865,7 @@ var fromJustInt = function fromJustInt(v) {
   }
 
   ;
-  throw new Error("Failed pattern match at App.EntryPoint (line 669, column 1 - line 669, column 32): " + [v.constructor.name]);
+  throw new Error("Failed pattern match at App.EntryPoint (line 677, column 1 - line 677, column 32): " + [v.constructor.name]);
 };
 
 var flexDivCenterItems = "width:100%; display:flex; flex-wrap:wrap;justify-content:center; background-color:transparent;";
@@ -57908,7 +57924,7 @@ var decideWinner = function decideWinner(dictOrd) {
               }
 
               ;
-              throw new Error("Failed pattern match at App.EntryPoint (line 643, column 1 - line 643, column 109): " + [p1Words.constructor.name, p2Words.constructor.name, p1WPM.constructor.name, p2WPM.constructor.name]);
+              throw new Error("Failed pattern match at App.EntryPoint (line 651, column 1 - line 651, column 109): " + [p1Words.constructor.name, p2Words.constructor.name, p1WPM.constructor.name, p2WPM.constructor.name]);
             };
           };
         };
@@ -57930,7 +57946,7 @@ var calculateMagicPush = function calculateMagicPush(p1Words) {
     }
 
     ;
-    throw new Error("Failed pattern match at App.EntryPoint (line 657, column 1 - line 657, column 37): " + [p1Words.constructor.name, p2Words.constructor.name]);
+    throw new Error("Failed pattern match at App.EntryPoint (line 665, column 1 - line 665, column 37): " + [p1Words.constructor.name, p2Words.constructor.name]);
   };
 };
 
@@ -57953,7 +57969,7 @@ var calcWPM = function calcWPM(wordsCount) {
     }
 
     ;
-    throw new Error("Failed pattern match at App.EntryPoint (line 677, column 1 - line 677, column 46): " + [wordsCount.constructor.name, v.constructor.name]);
+    throw new Error("Failed pattern match at App.EntryPoint (line 685, column 1 - line 685, column 46): " + [wordsCount.constructor.name, v.constructor.name]);
   };
 };
 
@@ -57981,7 +57997,7 @@ var battleOutcomeTitle = function battleOutcomeTitle(outcome) {
   }
 
   ;
-  throw new Error("Failed pattern match at App.EntryPoint (line 609, column 1 - line 609, column 39): " + [outcome.constructor.name]);
+  throw new Error("Failed pattern match at App.EntryPoint (line 612, column 1 - line 612, column 39): " + [outcome.constructor.name]);
 };
 
 var entryComponent = function entryComponent(dictMonadEffect) {
@@ -58000,7 +58016,7 @@ var entryComponent = function entryComponent(dictMonadEffect) {
       ;
 
       if (v instanceof PVP) {
-        return Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("width:70%; background-color:#2c2f33;")])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style(timerVisibility(v.value0.readyTimeoutTimer))])([Halogen_HTML_Core.text("Battle Starts In: " + Data_Show.show(Data_Show.showInt)(v.value0.readyTimeoutTimer))]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style(modalCSS(v.value0.showGameEndModal))])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style(battleOutcomeTitle(v.value0.combatOutcome))])([Halogen_HTML_Core.text(v.value0.combatOutcome)]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("position:relative;width:100%;height:200px;")])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("width:300px;float:left;font-size:40px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;padding-left:20px;")])([Halogen_HTML_Core.text("WPM: " + Data_Number_Format.toStringWith(Data_Number_Format.precision(3))(fromJustNumber(v.value0.wpm)))]), Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("width:300px;float:right;font-size:40px;color:red;text-shadow: 0px 0px 5px #555;margin:10px;padding-right:30px;")])([Halogen_HTML_Core.text("WPM: " + Data_Number_Format.toStringWith(Data_Number_Format.precision(3))(fromJustNumber(v.value0.enemyWPM)))])]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("position:relative;width:100%;height:200px;")])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("width:300px;float:left;font-size:40px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;padding-left:20px;")])([Halogen_HTML_Core.text("Correct Words: " + Data_Show.show(Data_Show.showInt)(v.value0.wordCounter - v.value0.wrongWordCounter | 0))]), Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("width:300px;float:right;font-size:40px;color:red;text-shadow: 0px 0px 5px #555;margin:10px;padding-right:30px;")])([Halogen_HTML_Core.text("Correct Words: " + Data_Show.show(Data_Show.showInt)(v.value0.enemyCorrectWords))])]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("position:relative;width:100%;height:200px;")])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("width:100%;font-size:30px;color:orange;text-shadow: 0px 0px 5px #555;margin:10px;")])([Halogen_HTML_Core.text(generateFlavourText(wpmSetup(v.value0.wpm))(wpmSetup(v.value0.enemyWPM)))])])]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%")])([Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("display:inline-flex;width:100%;justify-self:center;margin-top:10%;margin-bottom:15%;background-color:transparent;")])([Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("position:absolute;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;left:15%;top:32%")])([Halogen_HTML_Elements.img([Halogen_HTML_Properties.src("images/mage.gif"), Halogen_HTML_Properties.height(150), Halogen_HTML_Properties.width(200)])]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("position:absolute;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;right:15%;top:32%;")])([Halogen_HTML_Elements.img([Halogen_HTML_Properties.src("images/player2-mage.gif"), Halogen_HTML_Properties.height(150), Halogen_HTML_Properties.width(200)])])]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("position:absolute;display: inline-flex; flex-wrap:nowrap; width:60%;justify-content:space-between;justify-self:center;top:50%")])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("position:relative;font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:yellow;text-shadow: 0px 2px 3px #555;")])([Halogen_HTML_Core.text(v.value0.playerName)]), Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("position:relative;font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:yellow;text-shadow: 0px 2px 3px #555;")])([Halogen_HTML_Core.text(v.value0.enemyName)])])]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("width:100%; background-color:#2c2f33;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%")])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:orange;text-shadow: 0px 2px 3px #555;min-width:100%")])([Halogen_HTML_Core.text(fromJustString(Data_Array.index(myWords(v.value0.textNo))(v.value0.wordCounter)) + (" " + (fromJustString(Data_Array.index(myWords(v.value0.textNo))(v.value0.wordCounter + 1 | 0)) + (" " + fromJustString(Data_Array.index(myWords(v.value0.textNo))(v.value0.wordCounter + 2 | 0))))))]), Halogen_HTML_Elements.input([Halogen_HTML_Properties.id_("inp"), Halogen_HTML_Events.onValueChange(function (s) {
+        return Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("width:70%; background-color:#2c2f33;")])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style(timerVisibility(v.value0.readyTimeoutTimer))])([Halogen_HTML_Core.text("Battle Starts In: " + Data_Show.show(Data_Show.showInt)(v.value0.readyTimeoutTimer))]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style(modalCSS(v.value0.showGameEndModal))])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style(battleOutcomeTitle(v.value0.combatOutcome))])([Halogen_HTML_Core.text(v.value0.combatOutcome)]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("position:relative;width:100%;height:200px;")])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("width:300px;float:left;font-size:40px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;padding-left:20px;")])([Halogen_HTML_Core.text("WPM: " + Data_Number_Format.toStringWith(Data_Number_Format.precision(3))(fromJustNumber(v.value0.wpm)))]), Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("width:300px;float:right;font-size:40px;color:red;text-shadow: 0px 0px 5px #555;margin:10px;padding-right:30px;")])([Halogen_HTML_Core.text("WPM: " + Data_Number_Format.toStringWith(Data_Number_Format.precision(3))(fromJustNumber(v.value0.enemyWPM)))])]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("position:relative;width:100%;height:200px;")])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("width:300px;float:left;font-size:40px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;padding-left:20px;")])([Halogen_HTML_Core.text("Correct Words: " + Data_Show.show(Data_Show.showInt)(v.value0.wordCounter - v.value0.wrongWordCounter | 0))]), Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("width:300px;float:right;font-size:40px;color:red;text-shadow: 0px 0px 5px #555;margin:10px;padding-right:30px;")])([Halogen_HTML_Core.text("Correct Words: " + Data_Show.show(Data_Show.showInt)(v.value0.enemyCorrectWords))])]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("position:relative;width:100%;height:200px;")])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("width:100%;font-size:30px;color:orange;text-shadow: 0px 0px 5px #555;margin:10px;")])([Halogen_HTML_Core.text(generateFlavourText(wpmSetup(v.value0.wpm))(wpmSetup(v.value0.enemyWPM)))])])]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%")])([Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("display:inline-flex;width:100%;justify-self:center;margin-top:10%;margin-bottom:15%;background-color:transparent;")])([Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("position:absolute;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;left:15%;top:32%")])([Halogen_HTML_Elements.img([Halogen_HTML_Properties.src("images/mage.gif"), Halogen_HTML_Properties.height(150), Halogen_HTML_Properties.width(200)])]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("position:absolute;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;right:15%;top:32%;")])([Halogen_HTML_Elements.img([Halogen_HTML_Properties.src("images/player2-mage.gif"), Halogen_HTML_Properties.height(150), Halogen_HTML_Properties.width(200)])])]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("position:absolute;display: inline-flex; flex-wrap:nowrap; width:60%;justify-content:space-between;justify-self:center;top:50%")])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("position:relative;font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:yellow;text-shadow: 0px 2px 3px #555;")])([Halogen_HTML_Core.text(v.value0.playerName)]), Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("position:relative;font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:yellow;text-shadow: 0px 2px 3px #555;")])([Halogen_HTML_Core.text(v.value0.enemyName)])])]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("width:100%; background-color:#2c2f33;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%")])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style(makeTextVisible(v.value0.showText))])([Halogen_HTML_Core.text(fromJustString(Data_Array.index(myWords(v.value0.textNo))(v.value0.wordCounter)) + (" " + (fromJustString(Data_Array.index(myWords(v.value0.textNo))(v.value0.wordCounter + 1 | 0)) + (" " + fromJustString(Data_Array.index(myWords(v.value0.textNo))(v.value0.wordCounter + 2 | 0))))))]), Halogen_HTML_Elements.input([Halogen_HTML_Properties.id_("inp"), Halogen_HTML_Events.onValueChange(function (s) {
           return new Data_Maybe.Just(new ActionPVP(new SendInputpvp(s)));
         }), Halogen_HTML_Properties.style(" color:white; height:50px;width:150px; margin-left:20%; margin-top:5%; margin-bottom:10%;font-size:24px;border-color:orange;background-color:transparent;")]), Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("color:yellow;font:40px Comic Sans;min-width:300px;text-align:center;")])([Halogen_HTML_Core.text(Data_Show.show(Data_Show.showInt)(v.value0.timer) + " seconds left")]), Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("color:lightblue;font:24px Comic Sans;min-width:300px;")])([Halogen_HTML_Core.text(" WPM: " + Data_Show.show(Data_Maybe.showMaybe(Data_Show.showNumber))(v.value0.wpm))]), Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("color:lightgreen;font:24px Comic Sans;min-width:300px;")])([Halogen_HTML_Core.text("  Correct words: " + (Data_Show.show(Data_Show.showInt)(v.value0.wordCounter - v.value0.wrongWordCounter | 0) + (" " + (" Wrong words: " + Data_Show.show(Data_Show.showInt)(v.value0.wrongWordCounter)))))])])]);
       }
@@ -58014,7 +58030,7 @@ var entryComponent = function entryComponent(dictMonadEffect) {
       }
 
       ;
-      throw new Error("Failed pattern match at App.EntryPoint (line 413, column 5 - line 443, column 10): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at App.EntryPoint (line 416, column 5 - line 446, column 10): " + [v.constructor.name]);
     };
 
     var handleActionPVP = function handleActionPVP($copy_v) {
@@ -58027,9 +58043,9 @@ var entryComponent = function entryComponent(dictMonadEffect) {
           return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Control_Monad_State_Class.get(Halogen_Query_HalogenM.monadStateHalogenM))(function (state) {
             if (state instanceof PVP) {
               return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Query_HalogenM.bindHalogenM)(function () {
-                var $102 = state.value0.timerIsRunning === false;
+                var $103 = state.value0.timerIsRunning === false;
 
-                if ($102) {
+                if ($103) {
                   return Control_Applicative.pure(Halogen_Query_HalogenM.applicativeHalogenM)(Data_Unit.unit);
                 }
 
@@ -58069,7 +58085,8 @@ var entryComponent = function entryComponent(dictMonadEffect) {
                         hasOpponent: st.hasOpponent,
                         opponentID: st.opponentID,
                         myID: st.myID,
-                        textNo: st.textNo
+                        textNo: st.textNo,
+                        showText: st.showText
                       };
                     })))(function () {
                       return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Effect_Class.liftEffect(Halogen_Query_HalogenM.monadEffectHalogenM(dictMonadAff.MonadEffect0()))(SupJS.cleanInputBox(Data_Unit.unit)))(function () {
@@ -58121,9 +58138,9 @@ var entryComponent = function entryComponent(dictMonadEffect) {
           return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Control_Monad_State_Class.get(Halogen_Query_HalogenM.monadStateHalogenM))(function (state) {
             if (state instanceof PVP) {
               var newtimer = state.value0.timer - 1 | 0;
-              var $109 = state.value0.timer > 0 && state.value0.particlesWidth > -200.0 && state.value0.particlesWidth < 900.0;
+              var $110 = state.value0.timer > 0 && state.value0.particlesWidth > -200.0 && state.value0.particlesWidth < 900.0;
 
-              if ($109) {
+              if ($110) {
                 return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Query_HalogenM.bindHalogenM)(Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(updatePVP(function (st) {
                   return {
                     wrongWordCounter: st.wrongWordCounter,
@@ -58147,7 +58164,8 @@ var entryComponent = function entryComponent(dictMonadEffect) {
                     hasOpponent: st.hasOpponent,
                     opponentID: st.opponentID,
                     myID: st.myID,
-                    textNo: st.textNo
+                    textNo: st.textNo,
+                    showText: st.showText
                   };
                 })))(function () {
                   return Data_Functor["void"](Halogen_Query_HalogenM.functorHalogenM)(Effect_Class.liftEffect(Halogen_Query_HalogenM.monadEffectHalogenM(dictMonadAff.MonadEffect0()))(SupJS.changeParticleSpeed(fromJustNumber(state.value0.wpm))));
@@ -58181,7 +58199,8 @@ var entryComponent = function entryComponent(dictMonadEffect) {
                     hasOpponent: st.hasOpponent,
                     opponentID: st.opponentID,
                     myID: st.myID,
-                    textNo: st.textNo
+                    textNo: st.textNo,
+                    showText: st.showText
                   };
                 })))(function () {
                   return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Effect_Class.liftEffect(Halogen_Query_HalogenM.monadEffectHalogenM(dictMonadAff.MonadEffect0()))(SupJS.disableInputBox(Data_Unit.unit)))(function () {
@@ -58203,9 +58222,9 @@ var entryComponent = function entryComponent(dictMonadEffect) {
           return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Control_Monad_State_Class.get(Halogen_Query_HalogenM.monadStateHalogenM))(function (state) {
             if (state instanceof PVP) {
               var newTimeoutTimer = state.value0.readyTimeoutTimer - 1 | 0;
-              var $113 = state.value0.readyTimeoutTimer > 0;
+              var $114 = state.value0.readyTimeoutTimer > 0;
 
-              if ($113) {
+              if ($114) {
                 return Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(updatePVP(function (st) {
                   return {
                     wrongWordCounter: st.wrongWordCounter,
@@ -58229,7 +58248,8 @@ var entryComponent = function entryComponent(dictMonadEffect) {
                     hasOpponent: st.hasOpponent,
                     opponentID: st.opponentID,
                     myID: st.myID,
-                    textNo: st.textNo
+                    textNo: st.textNo,
+                    showText: st.showText
                   };
                 }));
               }
@@ -58260,7 +58280,8 @@ var entryComponent = function entryComponent(dictMonadEffect) {
                       hasOpponent: st.hasOpponent,
                       opponentID: st.opponentID,
                       myID: st.myID,
-                      textNo: st.textNo
+                      textNo: st.textNo,
+                      showText: st.showText
                     };
                   })))(function () {
                     return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Halogen_Query_HalogenM["subscribe'"](function (sid2) {
@@ -58319,7 +58340,7 @@ var entryComponent = function entryComponent(dictMonadEffect) {
           }
 
           ;
-          throw new Error("Failed pattern match at App.EntryPoint (line 296, column 9 - line 298, column 51): " + [v1.constructor.name]);
+          throw new Error("Failed pattern match at App.EntryPoint (line 299, column 9 - line 301, column 51): " + [v1.constructor.name]);
         }
 
         ;
@@ -58330,9 +58351,9 @@ var entryComponent = function entryComponent(dictMonadEffect) {
             return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Control_Monad_State_Class.get(Halogen_Query_HalogenM.monadStateHalogenM))(function (state) {
               return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Query_HalogenM.bindHalogenM)(function () {
                 if (state instanceof PVP) {
-                  var $121 = v.value2 === fromJustString(state.value0.opponentID);
+                  var $122 = v.value2 === fromJustString(state.value0.opponentID);
 
-                  if ($121) {
+                  if ($122) {
                     var updatedParticlesWidth = state.value0.particlesWidth + calculateMagicPush(state.value0.enemyCorrectWords)(v.value1);
                     return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Query_HalogenM.bindHalogenM)(Effect_Class_Console.log(Halogen_Query_HalogenM.monadEffectHalogenM(dictMonadAff.MonadEffect0()))(Data_Show.show(Data_Show.showNumber)(updatedParticlesWidth)))(function () {
                       return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Query_HalogenM.bindHalogenM)(Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(updatePVP(function (st) {
@@ -58358,7 +58379,8 @@ var entryComponent = function entryComponent(dictMonadEffect) {
                           hasOpponent: st.hasOpponent,
                           opponentID: st.opponentID,
                           myID: st.myID,
-                          textNo: st.textNo
+                          textNo: st.textNo,
+                          showText: st.showText
                         };
                       })))(function () {
                         return Data_Functor["void"](Halogen_Query_HalogenM.functorHalogenM)(Effect_Class.liftEffect(Halogen_Query_HalogenM.monadEffectHalogenM(dictMonadAff.MonadEffect0()))(SupJS.changeParticleSpeed2(fromJustNumber(state.value0.enemyWPM))));
@@ -58385,9 +58407,9 @@ var entryComponent = function entryComponent(dictMonadEffect) {
           $tco_done = true;
           return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Control_Monad_State_Class.get(Halogen_Query_HalogenM.monadStateHalogenM))(function (state) {
             if (state instanceof PVP) {
-              var $127 = state.value0.notInitialized && state.value0.hasOpponent === false;
+              var $128 = state.value0.notInitialized && state.value0.hasOpponent === false;
 
-              if ($127) {
+              if ($128) {
                 return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Query_HalogenM.bindHalogenM)(Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(updatePVP(function (st) {
                   return {
                     wrongWordCounter: st.wrongWordCounter,
@@ -58411,13 +58433,14 @@ var entryComponent = function entryComponent(dictMonadEffect) {
                     hasOpponent: true,
                     opponentID: new Data_Maybe.Just(v.value0),
                     myID: st.myID,
-                    textNo: st.textNo
+                    textNo: st.textNo,
+                    showText: true
                   };
                 })))(function () {
                   return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Query_HalogenM.bindHalogenM)(function () {
-                    var $128 = Data_Eq.eq(Data_Maybe.eqMaybe(Data_Eq.eqInt))(new Data_Maybe.Just(v.value2))(new Data_Maybe.Just(state.value0.textNo));
+                    var $129 = Data_Eq.eq(Data_Maybe.eqMaybe(Data_Eq.eqInt))(new Data_Maybe.Just(v.value2))(new Data_Maybe.Just(state.value0.textNo));
 
-                    if ($128) {
+                    if ($129) {
                       return Control_Applicative.pure(Halogen_Query_HalogenM.applicativeHalogenM)(Data_Unit.unit);
                     }
 
@@ -58445,7 +58468,8 @@ var entryComponent = function entryComponent(dictMonadEffect) {
                         hasOpponent: st.hasOpponent,
                         opponentID: st.opponentID,
                         myID: st.myID,
-                        textNo: v.value2
+                        textNo: v.value2,
+                        showText: st.showText
                       };
                     }));
                   }())(function () {
@@ -58483,7 +58507,8 @@ var entryComponent = function entryComponent(dictMonadEffect) {
                           hasOpponent: st.hasOpponent,
                           opponentID: st.opponentID,
                           myID: st.myID,
-                          textNo: st.textNo
+                          textNo: st.textNo,
+                          showText: st.showText
                         };
                       })))(function () {
                         return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Halogen_Query_HalogenM["subscribe'"](function (sid) {
@@ -58511,7 +58536,7 @@ var entryComponent = function entryComponent(dictMonadEffect) {
         }
 
         ;
-        throw new Error("Failed pattern match at App.EntryPoint (line 195, column 23 - line 338, column 48): " + [v.constructor.name]);
+        throw new Error("Failed pattern match at App.EntryPoint (line 198, column 23 - line 341, column 48): " + [v.constructor.name]);
       }
 
       ;
@@ -58530,9 +58555,9 @@ var entryComponent = function entryComponent(dictMonadEffect) {
           if (state instanceof PVE) {
             return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Query_HalogenM.bindHalogenM)(Effect_Class_Console.log(Halogen_Query_HalogenM.monadEffectHalogenM(dictMonadAff.MonadEffect0()))(Data_Show.show(Data_Show.showBoolean)(state.value0.timerIsRunning)))(function () {
               return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Query_HalogenM.bindHalogenM)(function () {
-                var $135 = state.value0.timerIsRunning === false;
+                var $136 = state.value0.timerIsRunning === false;
 
-                if ($135) {
+                if ($136) {
                   return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Effect_Class.liftEffect(Halogen_Query_HalogenM.monadEffectHalogenM(dictMonadAff.MonadEffect0()))(Effect_Now.nowTime))(function (mynowtime) {
                     return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Query_HalogenM.bindHalogenM)(Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(updatePVE(function (st) {
                       return {
@@ -58622,9 +58647,9 @@ var entryComponent = function entryComponent(dictMonadEffect) {
             return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Query_HalogenM.bindHalogenM)(Effect_Class_Console.log(Halogen_Query_HalogenM.monadEffectHalogenM(dictMonadAff.MonadEffect0()))(Data_Show.show(Data_Show.showInt)(state.value0.timer)))(function () {
               var newMagic = SupJS.resizeMagic(state.value0.zombiePosition);
               var newtimer = state.value0.timer - 1 | 0;
-              var $139 = state.value0.timer > 0 && state.value0.zombiePosition > -50.0;
+              var $140 = state.value0.timer > 0 && state.value0.zombiePosition > -50.0;
 
-              if ($139) {
+              if ($140) {
                 var newZombiePosition = state.value0.zombiePosition - 8.0;
                 return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Query_HalogenM.bindHalogenM)(Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(updatePVE(function (st) {
                   return {
@@ -58650,9 +58675,9 @@ var entryComponent = function entryComponent(dictMonadEffect) {
               ;
               return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Query_HalogenM.bindHalogenM)(Halogen_Query_HalogenM.unsubscribe(v.value0))(function () {
                 return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Query_HalogenM.bindHalogenM)(function () {
-                  var $140 = state.value0.zombiePosition <= -50.0;
+                  var $141 = state.value0.zombiePosition <= -50.0;
 
-                  if ($140) {
+                  if ($141) {
                     return Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(updatePVE(function (st) {
                       return {
                         wrongWordCounter: st.wrongWordCounter,
@@ -58730,7 +58755,7 @@ var entryComponent = function entryComponent(dictMonadEffect) {
       }
 
       ;
-      throw new Error("Failed pattern match at App.EntryPoint (line 340, column 23 - line 411, column 30): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at App.EntryPoint (line 343, column 23 - line 414, column 30): " + [v.constructor.name]);
     };
 
     var handleActionEntry = function handleActionEntry(v) {
@@ -58798,7 +58823,7 @@ var entryComponent = function entryComponent(dictMonadEffect) {
       }
 
       ;
-      throw new Error("Failed pattern match at App.EntryPoint (line 167, column 25 - line 192, column 68): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at App.EntryPoint (line 170, column 25 - line 195, column 68): " + [v.constructor.name]);
     };
 
     var handleActionPicker = function handleActionPicker(v) {
@@ -58819,7 +58844,7 @@ var entryComponent = function entryComponent(dictMonadEffect) {
       }
 
       ;
-      throw new Error("Failed pattern match at App.EntryPoint (line 164, column 5 - line 164, column 81): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at App.EntryPoint (line 167, column 5 - line 167, column 81): " + [v.constructor.name]);
     };
 
     return Halogen_Component.mkComponent({
@@ -58874,6 +58899,7 @@ module.exports = {
   pveOutcome: pveOutcome,
   buttonsCss: buttonsCss,
   flexDivCenterItems: flexDivCenterItems,
+  makeTextVisible: makeTextVisible,
   inputBoxCSS: inputBoxCSS,
   decideWinner: decideWinner,
   generateFlavourText: generateFlavourText,
@@ -62386,7 +62412,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "60395" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "62621" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
