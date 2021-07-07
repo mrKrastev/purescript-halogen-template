@@ -45,6 +45,12 @@ import SupJS (startGame, changeParticleSpeed, changeParticleSpeedandWidth, clean
 import WSListener (setupWSListener)
 import Web.Socket.WebSocket (WebSocket)
 import Web.Socket.WebSocket as WS
+import Web.UIEvent.KeyboardEvent (KeyboardEvent)
+import Web.HTML.Window (document) as Web
+import Web.HTML (window) as Web
+import Web.UIEvent.KeyboardEvent.EventTypes as KET
+import Web.HTML.HTMLDocument as HTMLDocument
+import Web.UIEvent.KeyboardEvent as KE
 
 data State = PVE PveState  | PVP PvpState | Entry EntryState
 
@@ -60,7 +66,13 @@ type PveState={
               zombiePosition::Number,
               particlesWidth::Number,
               showGameEndModal::Boolean,
+              difficulty::String,
+              easyColorButton::String,
+              mediumColorButton::String,
+              hardColorButton::String,
               combatOutcome::String,
+              zombiePace::Number,
+              penalty::Number,
               textNo::Int}
 
 type EntryState={  
@@ -117,6 +129,12 @@ initialPVEstate textNum = {wpm:Nothing,
     zombiePosition: 350.0,
     particlesWidth:400.0,
     showGameEndModal:false,
+    difficulty:"medium",
+    zombiePace:8.0,
+    penalty:4.0,
+    easyColorButton:"grey",
+    mediumColorButton:"orange",
+    hardColorButton:"grey",
     combatOutcome:"Win",
     textNo:textNum}
 
@@ -152,11 +170,12 @@ initialPVPstate webSocket name id textNumber = {wrongWordCounter:0,
 data Action = ActionEntry ActionEntry | ActionPVE ActionPVE |ActionPVP ActionPVP 
 
 
-data ActionEntry = RunPVE | RunPVP String  | SetName String
-data ActionPVE =  RunEntry | Update | SendInput String | Decrement SubscriptionId
+data ActionEntry = RunPVE | RunPVP String  | SetName String --(| HandleSpacebar H.SubscriptionId KeyboardEvent
+data ActionPVE =  RunEntry | Update | SendInput String | Decrement SubscriptionId | OnEasyButtonClick | OnMediumButtonClick | OnHardButtonClick
 data ActionPVP=  RunEntrypvp | Updatepvp SubscriptionId | SendInputpvp String |DecrementInitialTimer SubscriptionId | Decrementpvp SubscriptionId | ReceiveMessage String | UpdatePlayer2 (Maybe Number) Int String | SetPlayerConnected String String Int 
 
-entryComponent :: forall t400 t401 t423 t426. MonadEffect t400 => MonadAff t400 => Component HTML t426 t423 t401 t400
+
+entryComponent :: forall t1535 t1536 t1558 t1561. MonadEffect t1535 => MonadAff t1535 => Component HTML t1561 t1558 t1536 t1535
 entryComponent =
   H.mkComponent
     { initialState: \_ -> (Entry initialEntrystate)
@@ -168,13 +187,23 @@ entryComponent =
     handleActionPicker (ActionPVE actionPve) = handleActionPVE actionPve
     handleActionPicker (ActionPVP actionPvp) = handleActionPVP actionPvp
     handleActionEntry = case _ of 
-        RunPVE -> do 
+       -- HandleSpacebar sid ev -> pure unit
+        RunPVE -> do                
          random <- liftEffect $ randomInt 0 4
          let textNumber = fromJustInt((parseInt (show random) (toRadix 10)))
          H.put (PVE (initialPVEstate (textNumber)))
          pure unit   
+         --subscribe to keyboard to track spacebar
+         --document <- liftEffect $ Web.document =<< Web.window
+         --H.subscribe' \sid ->
+                    --ES.eventListenerEventSource
+                    --KET.keydown
+                    --(HTMLDocument.toEventTarget document)
+                    --(map (HandleSpacebar sid) <<< KE.fromEvent)
+        --fix magic particles
          _<-liftEffect $ renderMagicJs unit
-         pure unit  
+         pure unit 
+          
         RunPVP name -> do
             ws <- liftEffect $ WS.create "wss://typing-mage.herokuapp.com" []
             liftAff $ delay (Milliseconds 1000.0) -- allow ws to initialise
@@ -193,6 +222,9 @@ entryComponent =
             void $ liftEffect $ fixPVPmagic unit
             pure unit
         SetName s -> H.modify_ $ updateName $ \st->st{name=Just(s)}
+        
+        
+        
             
 
     handleActionPVP = case _ of 
@@ -341,6 +373,7 @@ entryComponent =
                                       pure unit
     
     handleActionPVE = case _ of
+    
         SendInput s ->
             do
             state<-H.get
@@ -367,7 +400,7 @@ entryComponent =
                 let myText =fromJustString ((myWords pveState.textNo) !!pveState.wordCounter)
                 let myNewWrongWordCounter=pveState.wrongWordCounter+incrementor s myText
                 let myNewWPM = calcWPM (myNewWordCounter-myNewWrongWordCounter) timeDifference
-                let myNewZombiePosition = pveState.zombiePosition+zombiePushValue s myText
+                let myNewZombiePosition = pveState.zombiePosition+zombiePushValue s myText pveState.penalty
                 let newMagic=(resizeMagic (pveState.zombiePosition))
                 pure unit
                 H.modify_ $ updatePVE \st -> st{
@@ -388,13 +421,12 @@ entryComponent =
             state <- H.get
             case state of
               PVE pveState ->do
-                log(show pveState.timer)
                 let newMagic=(resizeMagic (pveState.zombiePosition))
                 let newtimer = pveState.timer - 1       
                 if (pveState.timer>0) && (pveState.zombiePosition>(-50.0))
                 then
                 do
-                    let newZombiePosition = pveState.zombiePosition-8.0
+                    let newZombiePosition = pveState.zombiePosition-pveState.zombiePace
                     H.modify_ $ updatePVE \st-> st{ timer = newtimer,zombiePosition=newZombiePosition,
                                             wpm= Just(calcWPMTimer (((toNumber pveState.wordCounter))-(toNumber pveState.wrongWordCounter)) (toNumber newtimer))}
                     void $ liftEffect $ changeParticleSpeed (fromJustNumber pveState.wpm)
@@ -412,6 +444,10 @@ entryComponent =
               _->do
                pure unit
         RunEntry -> pure unit
+        OnEasyButtonClick -> H.modify_ $ updatePVE \st-> st{ difficulty="easy",easyColorButton = "green",mediumColorButton="grey",hardColorButton="grey",zombiePace=7.0,penalty=3.0}
+        OnMediumButtonClick -> H.modify_ $ updatePVE \st-> st{ difficulty="medium",easyColorButton = "grey",mediumColorButton="orange",hardColorButton="grey",zombiePace=8.0,penalty=4.0}
+        OnHardButtonClick -> H.modify_ $ updatePVE \st-> st{ difficulty="hard",easyColorButton = "grey",mediumColorButton="grey",hardColorButton="darkred",zombiePace=10.0,penalty=5.0}
+                 
 
     render (Entry entrystate) =
      HH.div
@@ -526,8 +562,28 @@ entryComponent =
         ]
     render (PVE myPVEstate)  =
      HH.div
-     [style "width:50%; background-color:#2c2f33;"]
-     [HH.div
+     [style "width:50%; background-color:#2c2f33;"][
+        HH.div
+     [style "display:flex;justify-content:center;position:absolute;width:inherit;"][
+       HH.div
+        [style ""]
+        [HH.button 
+        [ style (difficultyBtnCSS myPVEstate.easyColorButton "white"),HE.onClick \_ -> Just (ActionPVE OnEasyButtonClick) ]
+        [ HH.text "Easy" ]
+            ],
+        HH.div
+        [style ""]
+        [HH.button 
+        [ style (difficultyBtnCSS myPVEstate.mediumColorButton "white"),HE.onClick \_ -> Just (ActionPVE OnMediumButtonClick) ]
+        [ HH.text "Medium" ]
+            ],
+        HH.div
+        [style ""]
+        [HH.button 
+        [ style (difficultyBtnCSS myPVEstate.hardColorButton "white"),HE.onClick \_ -> Just (ActionPVE OnHardButtonClick) ]
+        [ HH.text "Hard" ]
+            ]],
+         HH.div
         [style $ modalCSS myPVEstate.showGameEndModal][
             HH.p
             [style $ pveOutcome myPVEstate.combatOutcome] 
@@ -619,6 +675,19 @@ pveOutcome :: String -> String
 pveOutcome outcome 
  | outcome == "Win" = "width:100%;margin: 50px auto;text-align: center;text-shadow: -1px -1px 0px rgba(255,255,255,0.3), 1px 1px 0px rgba(0,0,0,0.8);color:rgba(30, 130, 76, 1);opacity: 1;font: 700 80px 'Bitter'"
  | otherwise = "width:100%;margin: 50px auto;text-align: center;text-shadow: -1px -1px 0px rgba(255,255,255,0.3), 1px 1px 0px rgba(0,0,0,0.8);color:rgba(150, 40, 27, 1);opacity: 1;font: 700 80px 'Bitter'"
+
+difficultyBtnCSS ::String ->String-> String
+difficultyBtnCSS color colorText = "outline:0;"<>
+  "background:#fff;"<>
+  "border:none;"<>
+  "padding:2em 4em;"<>
+  "background-color:"<>color<>";"<>
+  "color:"<>colorText<>";"<>
+  "width:50px"<>
+  "height:100px;"
+
+
+
 
 buttonsCss :: String->String-> String
 buttonsCss color1 color2 = "width:200px;height:70px;"<>
@@ -713,10 +782,10 @@ incrementor input word
     | input == word = 0
     | otherwise = 1
 
-zombiePushValue :: forall t8. Eq t8 => t8 -> t8 -> Number
-zombiePushValue input word
+zombiePushValue :: forall t5. Eq t5 => t5 -> t5 -> Number -> Number
+zombiePushValue input word penalty
     | input == word = 2.0
-    | otherwise = -4.0
+    | otherwise = -penalty
 magicPushCalculator :: forall t8. Eq t8 => t8 -> t8 -> Number
 magicPushCalculator input word
     | input == word = 10.0
