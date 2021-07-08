@@ -623,11 +623,15 @@ entryComponent =
             ]  
         ,HH.div
         [style "width:100%; background-color:#2c2f33;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%"]
-        
+        [HH.div
+        [style "justify-self:center;width:90%;background-color:transparent;display:flex;justify-content:center;flex-wrap:wrap;"]
         [HH.p
-        [style"font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:orange;text-shadow: 0px 2px 3px #555;min-width:100%"] 
-            [HH.text $  (fromJustString ((myWords myPVEstate.textNo) !! myPVEstate.wordCounter))<>" "<> (fromJustString ((myWords myPVEstate.textNo) !! (myPVEstate.wordCounter+1)))<>" "<> (fromJustString ((myWords myPVEstate.textNo) !! (myPVEstate.wordCounter+2)))]
-        ,HH.input
+        [style"font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: right; color:white; text-shadow: 0 0 7px #fff, 0 0 10px #fff, 0 0 21px #fff, 0 0 42px #0fa, 0 0 82px #0fa, 0 0 92px #0fa, 0 0 102px #0fa, 0 0 151px #0fa;"] 
+            [HH.text $  (fromJustString ((myWords myPVEstate.textNo) !! myPVEstate.wordCounter))]
+        ,HH.p
+        [style"margin-left:3%;font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:orange;text-shadow: 0px 2px 3px #555;width:wrap-content;"] 
+            [HH.text $  (fromJustString ((myWords myPVEstate.textNo) !! (myPVEstate.wordCounter+1)))<>" "<> (fromJustString ((myWords myPVEstate.textNo) !! (myPVEstate.wordCounter+2)))]
+        ],HH.input
             [ HP.id_ "inp",
             HE.onValueChange \s -> Just (ActionPVE (SendInput s)),
             style " color:white; height:50px;width:150px; margin-left:20%; margin-top:5%; margin-bottom:10%;font-size:24px;border-color:orange;background-color:transparent;"
