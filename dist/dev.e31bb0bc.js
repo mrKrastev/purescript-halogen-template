@@ -57693,7 +57693,7 @@ var zombiePushValue = function zombiePushValue(dictEq) {
         }
 
         ;
-        throw new Error("Failed pattern match at App.EntryPoint (line 789, column 1 - line 789, column 68): " + [input.constructor.name, word.constructor.name, penalty.constructor.name]);
+        throw new Error("Failed pattern match at App.EntryPoint (line 795, column 1 - line 795, column 68): " + [input.constructor.name, word.constructor.name, penalty.constructor.name]);
       };
     };
   };
@@ -57712,7 +57712,7 @@ var wrongWordIndicator = function wrongWordIndicator(dictEq) {
     }
 
     ;
-    throw new Error("Failed pattern match at App.EntryPoint (line 768, column 1 - line 773, column 26): " + [state.constructor.name]);
+    throw new Error("Failed pattern match at App.EntryPoint (line 774, column 1 - line 779, column 26): " + [state.constructor.name]);
   };
 };
 
@@ -57728,7 +57728,7 @@ var wpmSetup = function wpmSetup(v) {
   }
 
   ;
-  throw new Error("Failed pattern match at App.EntryPoint (line 754, column 1 - line 754, column 35): " + [v.constructor.name]);
+  throw new Error("Failed pattern match at App.EntryPoint (line 760, column 1 - line 760, column 35): " + [v.constructor.name]);
 };
 
 var updatePVP = function updatePVP(fn) {
@@ -57776,7 +57776,7 @@ var timerVisibility = function timerVisibility(timer) {
   }
 
   ;
-  throw new Error("Failed pattern match at App.EntryPoint (line 780, column 1 - line 780, column 33): " + [timer.constructor.name]);
+  throw new Error("Failed pattern match at App.EntryPoint (line 786, column 1 - line 786, column 33): " + [timer.constructor.name]);
 };
 
 var text5 = "Her eyebrows were a shade darker than her hair. They were thick and almost horizontal, emphasizing the depth of her eyes. She was rather handsome than beautiful. Her face was captivating by reason of a certain frankness of expression and a contradictory subtle play of features. Her manner was engaging. It was difficult for him to admit he was wrong. He had been so certain that he was correct and the deeply held belief could never be shaken. Yet the proof that he had been incorrect stood right before his eyes. See daddy, I told you that they are real! his daughter excitedly proclaimed. It went through such rapid contortions that the little bear was forced to change his hold on it so many times he became confused in the darkness, and could not, for the life of him, tell whether he held the sheep right side up, or upside down. But that point was decided for him a moment later by the animal itself, who, with a sudden twist, jabbed its horns so hard into his lowest ribs that he gave a grunt of anger and disgust.";
@@ -57814,7 +57814,7 @@ var pveOutcome = function pveOutcome(outcome) {
   }
 
   ;
-  throw new Error("Failed pattern match at App.EntryPoint (line 678, column 1 - line 678, column 31): " + [outcome.constructor.name]);
+  throw new Error("Failed pattern match at App.EntryPoint (line 684, column 1 - line 684, column 31): " + [outcome.constructor.name]);
 }; //CSS kek------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -57830,7 +57830,7 @@ var modalCSS = function modalCSS(flag) {
   }
 
   ;
-  throw new Error("Failed pattern match at App.EntryPoint (line 667, column 1 - line 667, column 30): " + [flag.constructor.name]);
+  throw new Error("Failed pattern match at App.EntryPoint (line 673, column 1 - line 673, column 30): " + [flag.constructor.name]);
 };
 
 var messageToAction = function messageToAction(msg) {
@@ -57887,7 +57887,7 @@ var makeTextVisible = function makeTextVisible(flag) {
   }
 
   ;
-  throw new Error("Failed pattern match at App.EntryPoint (line 714, column 1 - line 714, column 37): " + [flag.constructor.name]);
+  throw new Error("Failed pattern match at App.EntryPoint (line 720, column 1 - line 720, column 37): " + [flag.constructor.name]);
 };
 
 var magicPushCalculator = function magicPushCalculator(dictEq) {
@@ -57904,7 +57904,7 @@ var magicPushCalculator = function magicPushCalculator(dictEq) {
       }
 
       ;
-      throw new Error("Failed pattern match at App.EntryPoint (line 793, column 1 - line 793, column 62): " + [input.constructor.name, word.constructor.name]);
+      throw new Error("Failed pattern match at App.EntryPoint (line 799, column 1 - line 799, column 62): " + [input.constructor.name, word.constructor.name]);
     };
   };
 };
@@ -57988,7 +57988,7 @@ var incrementor = function incrementor(dictEq) {
       }
 
       ;
-      throw new Error("Failed pattern match at App.EntryPoint (line 784, column 1 - line 784, column 51): " + [input.constructor.name, word.constructor.name]);
+      throw new Error("Failed pattern match at App.EntryPoint (line 790, column 1 - line 790, column 51): " + [input.constructor.name, word.constructor.name]);
     };
   };
 };
@@ -58018,7 +58018,7 @@ var generateFlavourText = function generateFlavourText(wpm1) {
     }
 
     ;
-    throw new Error("Failed pattern match at App.EntryPoint (line 732, column 1 - line 732, column 50): " + [wpm1.constructor.name, wpm2.constructor.name]);
+    throw new Error("Failed pattern match at App.EntryPoint (line 738, column 1 - line 738, column 50): " + [wpm1.constructor.name, wpm2.constructor.name]);
   };
 };
 
@@ -58034,7 +58034,7 @@ var fromJustString = function fromJustString(v) {
   }
 
   ;
-  throw new Error("Failed pattern match at App.EntryPoint (line 742, column 1 - line 742, column 41): " + [v.constructor.name]);
+  throw new Error("Failed pattern match at App.EntryPoint (line 748, column 1 - line 748, column 41): " + [v.constructor.name]);
 };
 
 var pickLore = function pickLore(position) {
@@ -58057,7 +58057,7 @@ var fromJustNumber = function fromJustNumber(v) {
   }
 
   ;
-  throw new Error("Failed pattern match at App.EntryPoint (line 746, column 1 - line 746, column 41): " + [v.constructor.name]);
+  throw new Error("Failed pattern match at App.EntryPoint (line 752, column 1 - line 752, column 41): " + [v.constructor.name]);
 };
 
 var fromJustInt = function fromJustInt(v) {
@@ -58072,7 +58072,7 @@ var fromJustInt = function fromJustInt(v) {
   }
 
   ;
-  throw new Error("Failed pattern match at App.EntryPoint (line 750, column 1 - line 750, column 32): " + [v.constructor.name]);
+  throw new Error("Failed pattern match at App.EntryPoint (line 756, column 1 - line 756, column 32): " + [v.constructor.name]);
 };
 
 var flexDivCenterItems = "width:100%; display:flex; flex-wrap:wrap;justify-content:center; background-color:transparent;";
@@ -58137,7 +58137,7 @@ var decideWinner = function decideWinner(dictOrd) {
               }
 
               ;
-              throw new Error("Failed pattern match at App.EntryPoint (line 724, column 1 - line 724, column 109): " + [p1Words.constructor.name, p2Words.constructor.name, p1WPM.constructor.name, p2WPM.constructor.name]);
+              throw new Error("Failed pattern match at App.EntryPoint (line 730, column 1 - line 730, column 109): " + [p1Words.constructor.name, p2Words.constructor.name, p1WPM.constructor.name, p2WPM.constructor.name]);
             };
           };
         };
@@ -58159,7 +58159,7 @@ var calculateMagicPush = function calculateMagicPush(p1Words) {
     }
 
     ;
-    throw new Error("Failed pattern match at App.EntryPoint (line 738, column 1 - line 738, column 37): " + [p1Words.constructor.name, p2Words.constructor.name]);
+    throw new Error("Failed pattern match at App.EntryPoint (line 744, column 1 - line 744, column 37): " + [p1Words.constructor.name, p2Words.constructor.name]);
   };
 };
 
@@ -58182,7 +58182,7 @@ var calcWPM = function calcWPM(wordsCount) {
     }
 
     ;
-    throw new Error("Failed pattern match at App.EntryPoint (line 758, column 1 - line 758, column 46): " + [wordsCount.constructor.name, v.constructor.name]);
+    throw new Error("Failed pattern match at App.EntryPoint (line 764, column 1 - line 764, column 46): " + [wordsCount.constructor.name, v.constructor.name]);
   };
 };
 
@@ -58210,7 +58210,7 @@ var battleOutcomeTitle = function battleOutcomeTitle(outcome) {
   }
 
   ;
-  throw new Error("Failed pattern match at App.EntryPoint (line 672, column 1 - line 672, column 39): " + [outcome.constructor.name]);
+  throw new Error("Failed pattern match at App.EntryPoint (line 678, column 1 - line 678, column 39): " + [outcome.constructor.name]);
 };
 
 var entryComponent = function entryComponent(dictMonadEffect) {
@@ -58229,7 +58229,7 @@ var entryComponent = function entryComponent(dictMonadEffect) {
       ;
 
       if (v instanceof PVP) {
-        return Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("width:70%; background-color:#2c2f33;")])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style(timerVisibility(v.value0.readyTimeoutTimer))])([Halogen_HTML_Core.text("Battle Starts In: " + Data_Show.show(Data_Show.showInt)(v.value0.readyTimeoutTimer))]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style(modalCSS(v.value0.showGameEndModal))])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style(battleOutcomeTitle(v.value0.combatOutcome))])([Halogen_HTML_Core.text(v.value0.combatOutcome)]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("position:relative;width:100%;height:200px;")])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("width:300px;float:left;font-size:40px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;padding-left:20px;")])([Halogen_HTML_Core.text("WPM: " + Data_Number_Format.toStringWith(Data_Number_Format.precision(3))(fromJustNumber(v.value0.wpm)))]), Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("width:300px;float:right;font-size:40px;color:red;text-shadow: 0px 0px 5px #555;margin:10px;padding-right:30px;")])([Halogen_HTML_Core.text("WPM: " + Data_Number_Format.toStringWith(Data_Number_Format.precision(3))(fromJustNumber(v.value0.enemyWPM)))])]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("position:relative;width:100%;height:200px;")])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("width:300px;float:left;font-size:40px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;padding-left:20px;")])([Halogen_HTML_Core.text("Correct Words: " + Data_Show.show(Data_Show.showInt)(v.value0.wordCounter - v.value0.wrongWordCounter | 0))]), Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("width:300px;float:right;font-size:40px;color:red;text-shadow: 0px 0px 5px #555;margin:10px;padding-right:30px;")])([Halogen_HTML_Core.text("Correct Words: " + Data_Show.show(Data_Show.showInt)(v.value0.enemyCorrectWords))])]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("position:relative;width:100%;height:200px;")])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("width:100%;font-size:30px;color:orange;text-shadow: 0px 0px 5px #555;margin:10px;")])([Halogen_HTML_Core.text(generateFlavourText(wpmSetup(v.value0.wpm))(wpmSetup(v.value0.enemyWPM)))])])]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%")])([Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("display:inline-flex;width:100%;justify-self:center;margin-top:10%;margin-bottom:15%;background-color:transparent;")])([Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("position:absolute;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;left:15%;top:32%")])([Halogen_HTML_Elements.img([Halogen_HTML_Properties.src("images/mage.gif"), Halogen_HTML_Properties.height(150), Halogen_HTML_Properties.width(200)])]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("position:absolute;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;right:15%;top:32%;")])([Halogen_HTML_Elements.img([Halogen_HTML_Properties.src("images/player2-mage.gif"), Halogen_HTML_Properties.height(150), Halogen_HTML_Properties.width(200)])])]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("position:absolute;display: inline-flex; flex-wrap:nowrap; width:60%;justify-content:space-between;justify-self:center;top:50%")])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("position:relative;font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:yellow;text-shadow: 0px 2px 3px #555;")])([Halogen_HTML_Core.text(v.value0.playerName)]), Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("position:relative;font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:yellow;text-shadow: 0px 2px 3px #555;")])([Halogen_HTML_Core.text(v.value0.enemyName)])])]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("width:100%; background-color:#2c2f33;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%")])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style(makeTextVisible(v.value0.showText))])([Halogen_HTML_Core.text(fromJustString(Data_Array.index(myWords(v.value0.textNo))(v.value0.wordCounter)) + (" " + (fromJustString(Data_Array.index(myWords(v.value0.textNo))(v.value0.wordCounter + 1 | 0)) + (" " + fromJustString(Data_Array.index(myWords(v.value0.textNo))(v.value0.wordCounter + 2 | 0))))))]), Halogen_HTML_Elements.input([Halogen_HTML_Properties.id_("inp"), Halogen_HTML_Events.onValueChange(function (s) {
+        return Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("width:70%; background-color:#2c2f33;")])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style(timerVisibility(v.value0.readyTimeoutTimer))])([Halogen_HTML_Core.text("Battle Starts In: " + Data_Show.show(Data_Show.showInt)(v.value0.readyTimeoutTimer))]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style(modalCSS(v.value0.showGameEndModal))])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style(battleOutcomeTitle(v.value0.combatOutcome))])([Halogen_HTML_Core.text(v.value0.combatOutcome)]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("position:relative;width:100%;height:200px;")])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("width:300px;float:left;font-size:40px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;padding-left:20px;")])([Halogen_HTML_Core.text("WPM: " + Data_Number_Format.toStringWith(Data_Number_Format.precision(3))(fromJustNumber(v.value0.wpm)))]), Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("width:300px;float:right;font-size:40px;color:red;text-shadow: 0px 0px 5px #555;margin:10px;padding-right:30px;")])([Halogen_HTML_Core.text("WPM: " + Data_Number_Format.toStringWith(Data_Number_Format.precision(3))(fromJustNumber(v.value0.enemyWPM)))])]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("position:relative;width:100%;height:200px;")])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("width:300px;float:left;font-size:40px;color:cyan;text-shadow: 0px 0px 5px #555;margin:10px;padding-left:20px;")])([Halogen_HTML_Core.text("Correct Words: " + Data_Show.show(Data_Show.showInt)(v.value0.wordCounter - v.value0.wrongWordCounter | 0))]), Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("width:300px;float:right;font-size:40px;color:red;text-shadow: 0px 0px 5px #555;margin:10px;padding-right:30px;")])([Halogen_HTML_Core.text("Correct Words: " + Data_Show.show(Data_Show.showInt)(v.value0.enemyCorrectWords))])]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("position:relative;width:100%;height:200px;")])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("width:100%;font-size:30px;color:orange;text-shadow: 0px 0px 5px #555;margin:10px;")])([Halogen_HTML_Core.text(generateFlavourText(wpmSetup(v.value0.wpm))(wpmSetup(v.value0.enemyWPM)))])])]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%")])([Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("display:inline-flex;width:100%;justify-self:center;margin-top:10%;margin-bottom:15%;background-color:transparent;")])([Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("position:absolute;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;left:15%;top:32%")])([Halogen_HTML_Elements.img([Halogen_HTML_Properties.src("images/mage.gif"), Halogen_HTML_Properties.height(150), Halogen_HTML_Properties.width(200)])]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("position:absolute;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;right:15%;top:32%;")])([Halogen_HTML_Elements.img([Halogen_HTML_Properties.src("images/player2-mage.gif"), Halogen_HTML_Properties.height(150), Halogen_HTML_Properties.width(200)])])]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("position:absolute;display: inline-flex; flex-wrap:nowrap; width:60%;justify-content:space-between;justify-self:center;top:50%")])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("position:relative;font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:yellow;text-shadow: 0px 2px 3px #555;")])([Halogen_HTML_Core.text(v.value0.playerName)]), Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("position:relative;font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:yellow;text-shadow: 0px 2px 3px #555;")])([Halogen_HTML_Core.text(v.value0.enemyName)])])]), Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("width:100%; background-color:#2c2f33;display:flex; flex-wrap:wrap;justify-content:center;justify-self:center;margin-top:10%")])([Halogen_HTML_Elements.div([Halogen_HTML_Properties.style("justify-self:center;width:90%;background-color:transparent;display:flex;justify-content:center;flex-wrap:wrap;")])([Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: right; color:white; text-shadow: 0 0 7px #fff, 0 0 10px #fff, 0 0 21px #fff, 0 0 42px #0fa, 0 0 82px #0fa, 0 0 92px #0fa, 0 0 102px #0fa, 0 0 151px #0fa;")])([Halogen_HTML_Core.text(fromJustString(Data_Array.index(myWords(v.value0.textNo))(v.value0.wordCounter)))]), Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("margin-left:3%;font: 40px Tahoma, Helvetica, Arial, Sans-Serif;text-align: center;color:orange;text-shadow: 0px 2px 3px #555;width:wrap-content;")])([Halogen_HTML_Core.text(fromJustString(Data_Array.index(myWords(v.value0.textNo))(v.value0.wordCounter + 1 | 0)) + (" " + fromJustString(Data_Array.index(myWords(v.value0.textNo))(v.value0.wordCounter + 2 | 0))))])]), Halogen_HTML_Elements.input([Halogen_HTML_Properties.id_("inp"), Halogen_HTML_Events.onValueChange(function (s) {
           return new Data_Maybe.Just(new ActionPVP(new SendInputpvp(s)));
         }), Halogen_HTML_Properties.style(" color:white; height:50px;width:150px; margin-left:20%; margin-top:5%; margin-bottom:10%;font-size:24px;border-color:orange;background-color:transparent;")]), Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("color:yellow;font:40px Comic Sans;min-width:300px;text-align:center;")])([Halogen_HTML_Core.text(Data_Show.show(Data_Show.showInt)(v.value0.timer) + " seconds left")]), Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("color:lightblue;font:24px Comic Sans;min-width:300px;")])([Halogen_HTML_Core.text(" WPM: " + Data_Show.show(Data_Maybe.showMaybe(Data_Show.showNumber))(v.value0.wpm))]), Halogen_HTML_Elements.p([Halogen_HTML_Properties.style("color:lightgreen;font:24px Comic Sans;min-width:300px;")])([Halogen_HTML_Core.text("  Correct words: " + (Data_Show.show(Data_Show.showInt)(v.value0.wordCounter - v.value0.wrongWordCounter | 0) + (" " + (" Wrong words: " + Data_Show.show(Data_Show.showInt)(v.value0.wrongWordCounter)))))])])]);
       }
